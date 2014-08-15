@@ -13,7 +13,6 @@ import java.util.LinkedList;
 
 import javax.swing.JFrame;
 
-import com.sun.glass.events.WindowEvent;
 import com.taozeyu.orange.ImageWindow.ImageSource;
 
 public class TestStart {
@@ -22,7 +21,7 @@ public class TestStart {
 		
 		LinkedList<ImageWindow.ImageSource> list = new LinkedList<ImageWindow.ImageSource>();
 		
-		File dir = new File("O:\\girls");
+		File dir = new File("O:\\fuck");
 		
 		for(final File file:dir.listFiles()) {
 			

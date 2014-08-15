@@ -1,17 +1,32 @@
 package com.taozeyu.orange;
 
+import java.awt.Color;
+import java.awt.Graphics;
 import java.awt.Image;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLongArray;
 
 import javax.imageio.ImageIO;
+import javax.management.RuntimeErrorException;
 
 public class ImageWindow<S extends ImageWindow.ImageSource> {
 
+	private final static Image FailImage;
+	
+	static {
+		FailImage = new BufferedImage(24, 24, BufferedImage.TYPE_3BYTE_BGR);
+		Graphics g = FailImage.getGraphics();
+		g.setColor(Color.WHITE);
+		g.fillRect(0, 0, 24, 24);
+	}
+	
 	private final static long DefaultBufferedLimitSize = 1024 * 1024 * 128; //128MB
+	private final static long DefaultImageLoadTimeOut = 0L; // ban time out
 	private final static int DefaultWindowLength = 9;
 	private final static int DefaultThreadNum = 1;
 	
@@ -34,6 +49,7 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 	private final List<S> sourceList;
 	private final ImageBufferedList imageBufferedList;
 	private final int windowLength;
+	private final long imageLoadTimeOut;
 	
 	private int currIndex = -1;
 	
@@ -49,6 +65,8 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 	
 	private LockQueue<Task> taskQueue = new LockQueue<Task>();
 	
+	private static final ThreadLocal<Integer> threadIndex = new ThreadLocal<>();
+	private AtomicLongArray threadsTaskStartTime;
 	private Thread[] threads;
 	
 	public ImageWindow(List<S> sourceList) {
@@ -56,12 +74,13 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 	}
 	
 	public ImageWindow(List<S> sourceList, int windowLength, int threadNum) {
-		this(sourceList, windowLength, threadNum, DefaultBufferedLimitSize);
+		this(sourceList, windowLength, threadNum, DefaultBufferedLimitSize, DefaultImageLoadTimeOut);
 	}
 	
-	public ImageWindow(List<S> sourceList, int windowLength, int threadNum, long bufferedLimitSize) {
+	public ImageWindow(List<S> sourceList, int windowLength, int threadNum, long bufferedLimitSize, long imageLoadTimeOut) {
 		this.sourceList = sourceList;
 		this.windowLength = windowLength;
+		this.imageLoadTimeOut = imageLoadTimeOut;
 		this.windowTaskList = new ArrayList<Task>(windowLength);
 		
 		this.imageBufferedList = new ImageBufferedList(sourceList.size(), bufferedLimitSize);
@@ -148,9 +167,17 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 			}
 			imageBufferedList.setImage(targetIndex, image);
 			waitForGetter.onGetImage(image, sourceList.get(targetIndex));
-			targetIndex = 0;
 			waitForGetter = null;
 		}
+	}
+	
+	private void loadedImageFail(int targetIndex) {
+		try{
+			throw new Exception();
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		loadedImage(FailImage, targetIndex);
 	}
 	
 	private void moveWindow(int index) {
@@ -276,7 +303,7 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 			if(count++ >= CheckEach) {
 				count = 0;
 				if(!isIndexHitWindow(targetIndex)) {
-					throw new InterruptedIOException();
+					throw new InterruptedIOException("unnecessary image");
 				}
 			}
 			return inputStream.read();
@@ -303,15 +330,24 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 		InputStream is = new InterruptInputStream(source.getInputStream(), task.targetIndex);
 		
 		try{
-			
+			setStartTask();
 			Image image = ImageIO.read(is);
+			
+			if(image == null) {
+				image = FailImage;
+			}
 			
 			synchronized (windowLock) {
 				insertImageToWindow(image, toWindowIndex(task.targetIndex));
 			}
 			loadedImage(image, task.targetIndex);
 			
+		} catch(IOException e) {
+			
+			loadedImageFail(task.targetIndex);
+			
 		} finally {
+			setWaitingTask();
 			is.close();
 		}
 	}
@@ -325,23 +361,68 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 	}
 	
 	private void initTreads(int threadNum) {
-		threads = new Thread[threadNum];
+		
+		threads = new Thread[threadNum + (imageLoadTimeOut == 0L?0:1)];
+		threadsTaskStartTime = new AtomicLongArray(threadNum);
+		
 		for(int i=0; i<threadNum; ++i) {
-			Thread thread = new Thread(new Runnable() {
-				@Override
-				public void run() {
-					while(threadContinue) {
-						try {
-							backThreadRunLoop();
-						} catch(Exception e) {
-							e.printStackTrace();
+			(threads[i] = createNewThread(i)).start();
+		}
+		if(imageLoadTimeOut != 0L) {
+			threads[threadNum] = initGuardThread();
+			threads[threadNum].start();
+		}
+	}
+	
+	private Thread createNewThread(final int index) {
+		return new Thread(new Runnable() {
+			@Override
+			public void run() {
+				threadIndex.set(index);
+				while(threadContinue) {
+					try {
+						backThreadRunLoop();
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+	}
+	
+	private void setWaitingTask() {
+		int index = threadIndex.get();
+		threadsTaskStartTime.set(index, 0L);
+	}
+	
+	private void setStartTask() {
+		int index = threadIndex.get();
+		threadsTaskStartTime.set(index, System.currentTimeMillis());
+	}
+	
+	private Thread initGuardThread() {
+		return new Thread(new Runnable() {
+			@SuppressWarnings("deprecation")
+			@Override
+			public void run() {
+				while(threadContinue) {
+					try {
+						Thread.sleep(1000L);
+					} catch (InterruptedException e) { }
+					
+					long curr = System.currentTimeMillis();
+					
+					for(int i=0; i<threadsTaskStartTime.length(); ++i) {
+						long taskTime = threadsTaskStartTime.get(i);
+						if(taskTime != 0L && taskTime - curr >= imageLoadTimeOut) {
+							threadsTaskStartTime.set(i, 0L);
+							threads[i].stop();
+							threads[i] = createNewThread(i);
 						}
 					}
 				}
-			});
-			threads[i] = thread;
-			thread.start();
-		}
+			}
+		});
 	}
 	
 	public void close() {
