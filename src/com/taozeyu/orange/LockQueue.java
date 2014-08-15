@@ -13,14 +13,10 @@ class LockQueue<E> {
 		}
 	}
 	
-	public E get() {
+	public E get() throws InterruptedException {
 		synchronized (queue) {
 			if(queue.isEmpty()) {
-				try {
-					queue.wait();
-				} catch (InterruptedException e) {
-					return null;
-				}
+				queue.wait();
 			}
 			return queue.removeLast();
 		}

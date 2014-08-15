@@ -1,7 +1,6 @@
 package com.taozeyu.orange;
 
 import java.awt.Image;
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -49,6 +48,8 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 	private int windowStartIndex = -1;
 	
 	private LockQueue<Task> taskQueue = new LockQueue<Task>();
+	
+	private Thread[] threads;
 	
 	public ImageWindow(List<S> sourceList) {
 		this(sourceList, DefaultWindowLength, DefaultThreadNum);
@@ -289,30 +290,29 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 	
 	private void backThreadRunLoop() throws IOException {
 		
-		Task task = taskQueue.get();
+		Task task;
+		try {
+			task = taskQueue.get();
+		} catch (InterruptedException e1) {
+			return;
+		}
 		if(isIndexOutOfSourceList(task.targetIndex)) {
 			return;
 		}
 		S source = sourceList.get(task.targetIndex);
-		
 		InputStream is = new InterruptInputStream(source.getInputStream(), task.targetIndex);
-		BufferedInputStream bis = new BufferedInputStream(is);
 		
 		try{
 			
-			Image image = ImageIO.read(bis);
+			Image image = ImageIO.read(is);
 			
 			synchronized (windowLock) {
 				insertImageToWindow(image, toWindowIndex(task.targetIndex));
 			}
 			loadedImage(image, task.targetIndex);
 			
-		} catch(InterruptedIOException e) {
-			
-			// do nothing!
-			
 		} finally {
-			bis.close();
+			is.close();
 		}
 	}
 	
@@ -325,8 +325,9 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 	}
 	
 	private void initTreads(int threadNum) {
+		threads = new Thread[threadNum];
 		for(int i=0; i<threadNum; ++i) {
-			new Thread(new Runnable() {
+			Thread thread = new Thread(new Runnable() {
 				@Override
 				public void run() {
 					while(threadContinue) {
@@ -337,7 +338,23 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 						}
 					}
 				}
-			}).start();
+			});
+			threads[i] = thread;
+			thread.start();
+		}
+	}
+	
+	public void close() {
+		threadContinue = false;
+		for(Thread thread:threads) {
+			thread.interrupt();
+		}
+		for(Thread thread:threads) {
+			try {
+				thread.join();
+			} catch (InterruptedException e) {
+				// continue next;
+			}
 		}
 	}
 	

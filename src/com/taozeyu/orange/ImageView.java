@@ -43,6 +43,10 @@ public class ImageView<S extends ImageWindow.ImageSource> extends JPanel {
 		this.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
 	}
 	
+	public void close() {
+		this.imageWindows.close();
+	}
+	
 	//相对于图片的中点，在不放缩图片的情况下，相机正中央对着的坐标。
 	private int viewX, viewY;
 	//相机放系数

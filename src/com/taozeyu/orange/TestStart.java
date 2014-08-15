@@ -2,6 +2,8 @@ package com.taozeyu.orange;
 
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.event.WindowAdapter;
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -11,6 +13,7 @@ import java.util.LinkedList;
 
 import javax.swing.JFrame;
 
+import com.sun.glass.events.WindowEvent;
 import com.taozeyu.orange.ImageWindow.ImageSource;
 
 public class TestStart {
@@ -28,7 +31,7 @@ public class TestStart {
 				@Override
 				public InputStream getInputStream() {
 					try {
-						return new FileInputStream(file);
+						return new BufferedInputStream(new FileInputStream(file));
 					} catch (FileNotFoundException e) {
 						throw new RuntimeException(e);
 					}
@@ -55,7 +58,14 @@ public class TestStart {
 		ImageView<ImageWindow.ImageSource> imageView = new ImageView<ImageWindow.ImageSource>(getImageReadQueue());
 		
 		jframe.add(imageView);
-		
+		jframe.addWindowListener(new WindowAdapter() {
+
+			@Override
+			public void windowClosed(java.awt.event.WindowEvent arg0) {
+				super.windowClosing(arg0);
+				imageView.close();
+			}
+		});
 		EventQueue.invokeLater(new Runnable() {
 			
 			@Override
