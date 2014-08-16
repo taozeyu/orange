@@ -12,7 +12,7 @@ import java.sql.Statement;
 class DatabaseManager {
 
 	private static final Class<?>[] DaoClassList = new Class<?>[] {
-		ImageAttributeDao.class,
+		AttributeDao.class,
 	};
 	
 	final Connection conn;

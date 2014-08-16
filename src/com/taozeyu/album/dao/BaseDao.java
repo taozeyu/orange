@@ -59,20 +59,31 @@ abstract class BaseDao<C extends BaseDao<C>> {
 		}
 	}
 
-	public <CT extends BaseDao<C>> List<CT> getChildren(Class<CT> type) {
-		return getChildren(new LinkedList<CT>(), type, null);
+	public <CT> CT findChild(Class<CT> type) {
+		List<CT> list = findChildren(type);
+		if(list == null) {
+			return null;
+		}
+		if(list.isEmpty()) {
+			return null;
+		}
+		return list.get(0);
 	}
 	
-	public <CT extends BaseDao<C>> List<CT> getChildren(Class<CT> type, String orderby) {
-		return getChildren(new LinkedList<CT>(), type, orderby);
+	public <CT> List<CT> findChildren(Class<CT> type) {
+		return findChildren(new LinkedList<CT>(), type, null);
 	}
 	
-	public <CT extends BaseDao<C>> List<CT> getChildren(List<CT> containerList, Class<CT> type) {
-		return getChildren(containerList, type, null);
+	public <CT> List<CT> findChildren(Class<CT> type, String orderby) {
+		return findChildren(new LinkedList<CT>(), type, orderby);
+	}
+	
+	public <CT> List<CT> findChildren(List<CT> containerList, Class<CT> type) {
+		return findChildren(containerList, type, null);
 	}
 	
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public <CT extends BaseDao<C>> List<CT> getChildren(List<CT> containerList, Class<CT> type, String orderby) {
+	public <CT> List<CT> findChildren(List<CT> containerList, Class<CT> type, String orderby) {
 		
 		String columnName = belongsColumnMap.get(type);
 		

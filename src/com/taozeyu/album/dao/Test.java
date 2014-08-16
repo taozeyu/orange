@@ -6,9 +6,9 @@ public class Test {
 
 		DatabaseManager dbmanager = new DatabaseManager("test.db");
 		
-		ImageAttributeDao bean = ImageAttributeDao.manager.create();
+		AttributeDao bean = AttributeDao.manager.create();
 		
-		bean = ImageAttributeDao.manager.findById(1);
+		bean = AttributeDao.manager.findById(1);
 		bean.setInfo("\"好人\" \'真好\'");
 		bean.save();
 	}
