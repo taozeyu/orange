@@ -6,6 +6,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.sql.SQLException;
+import java.util.HashSet;
 import java.util.LinkedList;
 
 import org.json.JSONArray;
@@ -13,15 +14,78 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.taozeyu.album.dao.AttributeDao;
+import com.taozeyu.album.dao.DatabaseManager;
 import com.taozeyu.album.dao.TagBelongsGroupDao;
 import com.taozeyu.album.dao.TagDao;
 import com.taozeyu.album.dao.TagGroupDao;
 
 class ConfigLoader {
 
+	private HashSet<Long> visiableAttributeIDs;
+	private HashSet<Long> visiableTagIDs;
+	private HashSet<Long> visiableGroupIDs;
+	
 	void synchronize(InputStream inputStream) throws IOException, SQLException {
 		String configContent = readFromSourceStream(inputStream);
 		JSONArray json = new JSONArray(configContent);
+		
+		boolean hasComplete = false;
+		
+		try{
+			synFileRootArray(json);
+			searchVisiable();
+			hasComplete = true;
+			
+		} finally {
+			if(hasComplete) {
+				DatabaseManager.getInstance().commit();
+			} else {
+				DatabaseManager.getInstance().rollback();
+			}
+		}
+	}
+	
+	private void searchVisiable() throws SQLException {
+		
+		visiableAttributeIDs = new HashSet<Long>();
+		visiableTagIDs = new HashSet<Long>();
+		visiableGroupIDs = new HashSet<Long>();
+		
+		LinkedList<Long> ids = new LinkedList<Long>();
+		
+		for(AttributeDao bean:AttributeDao.manager.findAll(
+				new LinkedList<AttributeDao>(), "hide = 0")
+		) {
+			ids.add(bean.getId());
+			visiableAttributeIDs.add(bean.getId());
+		}
+		
+		for(TagDao bean:TagDao.manager.findAll(
+				new LinkedList<TagDao>(), "hide = 0 AND attributeID in (?)", ids)
+		) {
+			visiableTagIDs.add(bean.getId());
+		}
+		
+		for(TagGroupDao bean:TagGroupDao.manager.findAll(
+				new LinkedList<TagGroupDao>(), "hide = 0 AND attributeID in (?)", ids)
+		) {
+			visiableGroupIDs.add(bean.getId());
+		}
+	}
+	
+	boolean isAttributeVisiable(long id) {
+		return visiableAttributeIDs.contains(id);
+	}
+	
+	boolean isTagVisiable(long id) {
+		return visiableTagIDs.contains(id);
+	}
+	
+	boolean isGroupVisiable(long id) {
+		return visiableGroupIDs.contains(id);
+	}
+	
+	private void synFileRootArray(JSONArray json) throws SQLException {
 		
 		for(AttributeDao bean:AttributeDao.manager.findAll(new LinkedList<AttributeDao>())) {
 			bean.setHide(1);

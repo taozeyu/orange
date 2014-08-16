@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -330,6 +331,19 @@ abstract class BaseDao<C extends BaseDao<C>> {
 	private String decorator(Object value) {
 		if(value == null) {
 			return "NULL";
+		} else if(value instanceof Iterable<?>) {
+			
+			StringBuilder buff = new StringBuilder();
+			Iterator<?> it = ((Iterable<?>)value).iterator();
+			
+			while(it.hasNext()) {
+				buff.append(decorator(it.next()));
+				if(it.hasNext()) {
+					buff.append(", ");
+				}
+			}
+			return buff.toString();
+			
 		} else if(value instanceof String){
 			String keyWord = (String) value;
 			keyWord = keyWord.replace("/", "//");  

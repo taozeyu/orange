@@ -11,6 +11,12 @@ import java.sql.Statement;
 
 public class DatabaseManager {
 
+	private static DatabaseManager instance;
+	
+	public static DatabaseManager getInstance() {
+		return instance;
+	}
+
 	private static final Class<?>[] DaoClassList = new Class<?>[] {
 		AttributeDao.class,
 		ImageAttributeDao.class,
@@ -30,12 +36,24 @@ public class DatabaseManager {
 	public DatabaseManager(String dbPath, boolean clearOldDateBase) throws ClassNotFoundException, SQLException {
 		Class.forName("org.sqlite.JDBC");
 		conn = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
+		conn.setAutoCommit(false);
 		
 		initDaoManagerNodes();
 		initDataBase(clearOldDateBase);
+		
+		instance = this;
+	}
+	
+	public void commit() throws SQLException {
+		conn.commit();
+	}
+	
+	public void rollback() throws SQLException {
+		conn.rollback();
 	}
 	
 	public void close() throws SQLException {
+		conn.commit();
 		conn.close();
 	}
 	
