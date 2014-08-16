@@ -34,6 +34,17 @@ public class ImageView<S extends ImageWindow.ImageSource> extends JPanel {
 	
 	private HashMap<Component, Integer> childrenLocation = new HashMap<Component, Integer>();
 	
+	private interface ImageChangeListeners<S extends ImageWindow.ImageSource> {
+		void onImageChange(Image image, S imageSource);
+	}
+	
+	private ImageChangeListeners<S> listeners = null;
+	
+	public ImageView(ImageWindow<S> imageWindows, ImageChangeListeners<S> listeners) {
+		this(imageWindows);
+		setImageChangeListeners(listeners);
+	}
+	
 	public ImageView(ImageWindow<S> imageWindows) {
 		this.imageWindows = imageWindows;
 		this.addMouseListener(mouseAdapter);
@@ -47,6 +58,10 @@ public class ImageView<S extends ImageWindow.ImageSource> extends JPanel {
 	
 	public void close() {
 		this.imageWindows.close();
+	}
+	
+	public void setImageChangeListeners(ImageChangeListeners<S> listeners) {
+		this.listeners = listeners;
 	}
 	
 	//相对于图片的中点，在不放缩图片的情况下，相机正中央对着的坐标。
@@ -185,6 +200,10 @@ public class ImageView<S extends ImageWindow.ImageSource> extends JPanel {
 						setImage(image);
 						resetCameraButKeepScale();
 						repaint();
+						
+						if(listeners != null) {
+							listeners.onImageChange(image, imageSource);
+						}
 					}
 				});
 			}
