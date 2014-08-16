@@ -10,7 +10,7 @@ public class ImageAttributeDao extends BaseDao<ImageAttributeDao> {
 	};
 	
 	private static final String CreateSQL = 
-			"create table imageTags ("
+			"create table imageAttributes ("
 			+ "id bigint not null,"
 			+ "imageID bigint not null,"
 			+ "attributeID bitint not null,"

@@ -8,12 +8,12 @@ public class TagGroupDao extends BaseDao<TagGroupDao> {
 	
 	private static final String TableName = "tagGroups";
 	private static final String[] ColumnNames = new String[] {
-		"attributeID", "name", "info", "relactionLevel"
+		"attributeID", "name", "info", "relactionLevel", "hide",
 	};
 	private static final String CreateSQL = 
-			"create table tageGroups ("
+			"create table tagGroups ("
 			+ "id bigint not null,"
-			+ "attributeID bigint not null"
+			+ "attributeID bigint not null,"
 			+ "name string not null,"
 			+ "info string,"
 			+ "relactionLevel int not null,"

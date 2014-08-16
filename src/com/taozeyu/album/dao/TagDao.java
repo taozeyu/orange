@@ -7,13 +7,12 @@ public class TagDao extends BaseDao<TagDao> {
 	
 	private static final String TableName = "tags";
 	private static final String[] ColumnNames = new String[] {
-		"name", "info", "hide", "attributeID", "tagGroupID",
+		"name", "info", "hide", "attributeID",
 	};
 	private static final String CreateSQL = 
 			"create table tags ("
 			+ "id bigint not null,"
 			+ "attributeID bigint not null,"
-			+ "tagGroupID bigint,"
 			+ "name string not null,"
 			+ "info string,"
 			+ "hide int not null,"
@@ -32,7 +31,6 @@ public class TagDao extends BaseDao<TagDao> {
 
 	private int hide;
 	private long attributeID;
-	private Long tagGroupID;
 	private String name;
 	private String info;
 
@@ -42,14 +40,6 @@ public class TagDao extends BaseDao<TagDao> {
 
 	public void setAttributeID(long attributeID) {
 		this.attributeID = attributeID;
-	}
-
-	public Long getTagGroupID() {
-		return tagGroupID;
-	}
-
-	public void setTagGroupID(Long tagGroupID) {
-		this.tagGroupID = tagGroupID;
 	}
 
 	public String getName() {

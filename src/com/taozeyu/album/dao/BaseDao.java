@@ -104,28 +104,24 @@ abstract class BaseDao<C extends BaseDao<C>> {
 	}
 	
 	public C find(String condition, Object...args) throws SQLException {
-		return find(condition, null, args);
-	}
-	
-	public C find(String condition, String orderby, Object...args) throws SQLException {
-		List<C> rslist = findAll(new LinkedList<C>(), condition, orderby, args);
+		List<C> rslist = findAll(new LinkedList<C>(), condition, "", args);
 		return rslist.isEmpty()? null: rslist.get(0);
 	}
 	
 	public List<C> findAll(List<C> containerList) throws SQLException {
-		return findAll(containerList, null, null, null, null, new Object[] {});
+		return findAll(containerList, "", "", null, null, new Object[] {});
 	}
 	
 	public List<C> findAll(List<C> containerList, String condition, Object...args) throws SQLException {
-		return findAll(containerList, condition, null, null, null, args);
+		return findAll(containerList, condition, "", null, null, args);
 	}
 	
 	public List<C> findAll(List<C> containerList, String condition, Integer limit, Object...args) throws SQLException {
-		return findAll(containerList, condition, null, 0, limit, args);
+		return findAll(containerList, condition, "", 0, limit, args);
 	}
 	
 	public List<C> findAll(List<C> containerList, String condition, Integer startRow, Integer limitRow, Object...args) throws SQLException {
-		return findAll(containerList, condition, null, startRow, limitRow, args);
+		return findAll(containerList, condition, "", startRow, limitRow, args);
 	}
 	
 	public List<C> findAll(List<C> containerList, String condition, String orderby, Object...args) throws SQLException {
@@ -145,7 +141,6 @@ abstract class BaseDao<C extends BaseDao<C>> {
 		if(args == null) {
 			args = new Object[] {};
 		}
-		condition = condition.replace("?", "%s");
 		
 		try{
 			StringBuilder sql = new StringBuilder();
@@ -155,22 +150,23 @@ abstract class BaseDao<C extends BaseDao<C>> {
 			}
 			String[] columns = getColumnNames();
 			sql.append("SELECT ");
-			
+
+			sql.append("id");
 			for(int i=0; i<columns.length; ++i) {
+				sql.append(", ");
 				sql.append(columns[i]);
-				if(i < columns.length - 1) {
-					sql.append(", ");
-				}
 			}
+			
 			sql.append(" FROM ");
 			sql.append(getTableName());
 			sql.append(" ");
-			if(condition != null) {
+			if(condition != null && !condition.equals("")) {
+				condition = condition.trim().replace("?", "%s");
 				sql.append("WHERE ");
-				sql.append(String.format(condition.trim(), args));
+				sql.append(String.format(condition, args));
 				sql.append(" ");
 			}
-			if(orderby != null) {
+			if(orderby != null && !orderby.equals("")) {
 				sql.append("ORDER BY ");
 				sql.append(orderby.trim());
 				sql.append(" ");
@@ -200,6 +196,7 @@ abstract class BaseDao<C extends BaseDao<C>> {
 						Object value = rs.getObject(column);
 						bean.setValueByName(column, value);
 					}
+					bean.setValueByName("id", rs.getLong("id"));
 					containerList.add(bean);
 				}
 			} catch (Exception e) {

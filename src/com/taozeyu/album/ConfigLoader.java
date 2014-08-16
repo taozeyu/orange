@@ -1,6 +1,5 @@
 package com.taozeyu.album;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -14,31 +13,27 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import com.taozeyu.album.dao.AttributeDao;
+import com.taozeyu.album.dao.TagBelongsGroupDao;
 import com.taozeyu.album.dao.TagDao;
 import com.taozeyu.album.dao.TagGroupDao;
 
 class ConfigLoader {
 
-	private final InputStream inputStream;
-	
-	ConfigLoader(InputStream inputStream) {
-		this.inputStream = new BufferedInputStream(inputStream);
-	}
-	
-	void synchronize() throws IOException, SQLException {
-		String configContent = readFromSourceStream();
-		JSONObject json = new JSONObject(configContent);
+	void synchronize(InputStream inputStream) throws IOException, SQLException {
+		String configContent = readFromSourceStream(inputStream);
+		JSONArray json = new JSONArray(configContent);
 		
 		for(AttributeDao bean:AttributeDao.manager.findAll(new LinkedList<AttributeDao>())) {
 			bean.setHide(1);
 			bean.save();
 		}
 		
-		for(Object attrName: json.keySet()) {
+		for(int i=0; i<json.length(); ++i) {
 			try{
 				//解析是以Attribute为单位，某个Attribute的错误不会中断解析。（除非错误影响都之后的解析）
-				JSONObject attrJson = json.getJSONObject(attrName.toString());
-				synAttribute(attrName.toString(), attrJson);
+				JSONObject attrJson = json.getJSONObject(i);
+				String attrName = attrJson.getString("name");
+				synAttribute(attrName, attrJson);
 				
 			} catch(ConfigParseException e) {
 				e.printStackTrace();
@@ -61,7 +56,7 @@ class ConfigLoader {
 		attriBean.setImportance(attrJson.getInt("importance"));
 		attriBean.setHide(0);
 		attriBean.save();
-		
+
 		for(TagDao tagBean:TagDao.manager.findAll(
 				new LinkedList<TagDao>(), "attributeID = ?", attriBean.getId())
 		) {
@@ -92,20 +87,22 @@ class ConfigLoader {
 	}
 	
 	private void synTag(long attriID, String tagName, JSONObject tagJson) throws SQLException {
-		TagDao tagBean = TagDao.manager.find("attributeID = ?, name = ?", attriID, tagName);
+		TagDao tagBean = TagDao.manager.find("attributeID = ? AND name = ?", attriID, tagName);
 		if(tagBean == null) {
 			tagBean = TagDao.manager.create();
 			tagBean.setAttributeID(attriID);
 			tagBean.setName(tagName);
 		}
-		tagBean.setInfo(tagJson.getString("info"));
+		if(tagJson.has("info")) {
+			tagBean.setInfo(tagJson.getString("info"));
+		}
 		tagBean.setHide(0);
 		tagBean.save();
 	}
 	
 	private void synGroup(long attriID, String groupName, JSONObject groupJson) throws SQLException, ConfigParseException {
-		TagGroupDao groupBean = TagGroupDao.manager.find("attributeID = ?, name = ?", attriID, groupName);
-		if(groupBean != null) {
+		TagGroupDao groupBean = TagGroupDao.manager.find("attributeID = ? AND name = ?", attriID, groupName);
+		if(groupBean == null) {
 			groupBean = TagGroupDao.manager.create();
 			groupBean.setAttributeID(attriID);
 			groupBean.setName(groupName);
@@ -116,12 +113,17 @@ class ConfigLoader {
 		JSONArray arr = groupJson.getJSONArray("content");
 		for(int i=0; i<arr.length(); ++i) {
 			String tagName = arr.getString(i);
-			TagDao tagBean = TagDao.manager.find("name = ?, attributeID = ?", tagName, attriID);
+			TagDao tagBean = TagDao.manager.find("name = ? AND attributeID = ?", tagName, attriID);
 			if(tagBean == null) {
-				throw new ConfigParseException("不存在名为"+tagName+"的标签");
+				throw new ConfigParseException("不存在名为'"+tagName+"'的标签");
 			}
-			tagBean.setTagGroupID(groupBean.getId());
+			tagBean.setHide(0);
 			tagBean.save();
+			
+			TagBelongsGroupDao link = TagBelongsGroupDao.manager.create();
+			link.setTagGroupID(groupBean.getId());
+			link.setTagID(tagBean.getId());
+			link.save();
 		}
 	}
 	
@@ -129,27 +131,26 @@ class ConfigLoader {
 		String attrName = arr.getString(0);
 		AttributeDao attriBean = AttributeDao.manager.find("name = ?", attrName);
 		if(attriBean == null || attriBean.getHide() != 0) {
-			throw new ConfigParseException("不存在名为"+attrName+"的属性");
+			throw new ConfigParseException("不存在名为'"+attrName+"'的属性");
 		}
 		String tagName = arr.getString(1);
-		TagDao tagBean = TagDao.manager.find("attributeID = ?, name = ?", attriBean.getId(), tagName);
+		TagDao tagBean = TagDao.manager.find("attributeID = ? AND name = ?", attriBean.getId(), tagName);
 		if(tagBean == null || tagBean.getHide() != 0) {
-			throw new ConfigParseException("不存在名为"+tagName+"的标签");
+			throw new ConfigParseException("不存在名为'"+tagName+"'的标签");
 		}
 		return tagBean.getId();
 	}
 	
-	private String readFromSourceStream() throws IOException {
+	private String readFromSourceStream(InputStream inputStream) throws IOException {
 		StringBuilder sb = new StringBuilder();
 		Reader reader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
 		char[] buff = new char[1024];
 		try {
-			int length;
-			do{
-				length = reader.read(buff);
+			int length = reader.read(buff);
+			while(length != -1) {
 				sb.append(buff, 0, length);
-				
-			} while(length != -1);
+				length = reader.read(buff);
+			}
 			return sb.toString();
 		} finally {
 			reader.close();

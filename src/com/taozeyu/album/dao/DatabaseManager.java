@@ -9,10 +9,16 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
-class DatabaseManager {
+public class DatabaseManager {
 
 	private static final Class<?>[] DaoClassList = new Class<?>[] {
 		AttributeDao.class,
+		ImageAttributeDao.class,
+		ImageDao.class,
+		ImageTagDao.class,
+		TagDao.class,
+		TagGroupDao.class,
+		TagBelongsGroupDao.class,
 	};
 	
 	final Connection conn;

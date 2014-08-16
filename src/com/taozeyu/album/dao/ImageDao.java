@@ -13,7 +13,7 @@ public class ImageDao extends BaseDao<ImageDao> {
 	};
 	
 	private static final String CreateSQL = 
-			"create table imageTags ("
+			"create table images ("
 			+ "id bigint not null,"
 			+ "filePath string not null,"
 			+ "watchCount int not null,"
