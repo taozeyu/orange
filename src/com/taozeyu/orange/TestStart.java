@@ -21,7 +21,7 @@ public class TestStart {
 		
 		LinkedList<ImageWindow.ImageSource> list = new LinkedList<ImageWindow.ImageSource>();
 		
-		File dir = new File("O:\\fuck");
+		File dir = new File("O:\\新建文件夹");
 		
 		for(final File file:dir.listFiles()) {
 			

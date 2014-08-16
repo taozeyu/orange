@@ -95,6 +95,10 @@ class ImageBufferedList {
 	}
 	
 	private long getImageSize(Image image) {
+		
+		if(image == ImageWindow.FailImage) {
+			return 0L;
+		}
 		long width = image.getWidth(null);
 		long height = image.getHeight(null);
 		return width * height * DefaultColorDepth;

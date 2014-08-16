@@ -1,9 +1,7 @@
 package com.taozeyu.orange;
 
-import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Image;
-import java.awt.image.BufferedImage;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -12,17 +10,19 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 import javax.imageio.ImageIO;
-import javax.management.RuntimeErrorException;
 
 public class ImageWindow<S extends ImageWindow.ImageSource> {
 
-	private final static Image FailImage;
+	final static Image FailImage;
 	
 	static {
-		FailImage = new BufferedImage(24, 24, BufferedImage.TYPE_3BYTE_BGR);
-		Graphics g = FailImage.getGraphics();
-		g.setColor(Color.WHITE);
-		g.fillRect(0, 0, 24, 24);
+		InputStream inputStream = ImageWindow.class.getResourceAsStream("load_error.png");
+		inputStream = new BufferedInputStream(inputStream); 
+		try {
+			FailImage = ImageIO.read(inputStream);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 	
 	private final static long DefaultBufferedLimitSize = 1024 * 1024 * 128; //128MB
@@ -342,9 +342,15 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 			}
 			loadedImage(image, task.targetIndex);
 			
+		} catch(RuntimeException e) {
+			
+			loadedImageFail(task.targetIndex);
+			throw e;
+			
 		} catch(IOException e) {
 			
 			loadedImageFail(task.targetIndex);
+			throw e;
 			
 		} finally {
 			setWaitingTask();

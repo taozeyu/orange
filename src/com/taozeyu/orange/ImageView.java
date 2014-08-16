@@ -41,6 +41,8 @@ public class ImageView<S extends ImageWindow.ImageSource> extends JPanel {
 		this.addMouseWheelListener(mouseAdapter);
 		this.addComponentListener(componentAdapter);
 		this.setCursor(new Cursor(Cursor.CROSSHAIR_CURSOR));
+		
+		nextImage();
 	}
 	
 	public void close() {
