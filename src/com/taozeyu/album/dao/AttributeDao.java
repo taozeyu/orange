@@ -8,7 +8,7 @@ public class AttributeDao extends BaseDao<AttributeDao> {
 	
 	private static final String TableName = "attributes";
 	private static final String[] ColumnNames = new String[] {
-		"name", "info", "hide"
+		"name", "info", "hide", "importance"
 	};
 	
 	private static final HashMap<Class<?>, String> BelongsColumnMap = new HashMap<>();
@@ -22,9 +22,10 @@ public class AttributeDao extends BaseDao<AttributeDao> {
 			"create table attributes ("
 			+ "id bigint not null,"
 			+ "name string not null,"
-			+ "info string not null,"
+			+ "info string,"
 			+ "hide int not null,"
 			+ "dependTagID bigint,"
+			+ "importance int not null,"
 			+ "primary key (id));";
 	
 	public AttributeDao(DatabaseManager dbmanager) { super(dbmanager, BelongsColumnMap); }
@@ -38,8 +39,8 @@ public class AttributeDao extends BaseDao<AttributeDao> {
 	@Override
 	public String createTableSql() { return CreateSQL; }
 
-
 	private int hide;
+	private int importance;
 	private Long dependTagID;
 	private String name;
 	private String info;
@@ -74,5 +75,13 @@ public class AttributeDao extends BaseDao<AttributeDao> {
 
 	public void setDependTagID(Long dependTagID) {
 		this.dependTagID = dependTagID;
+	}
+
+	public int getImportance() {
+		return importance;
+	}
+
+	public void setImportance(int importance) {
+		this.importance = importance;
 	}
 }

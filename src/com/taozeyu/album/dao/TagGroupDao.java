@@ -2,11 +2,11 @@ package com.taozeyu.album.dao;
 
 import java.util.HashMap;
 
-public class TagGroupDao extends BaseDao<TagDao> {
+public class TagGroupDao extends BaseDao<TagGroupDao> {
 
 	public static TagGroupDao manager = null;
 	
-	private static final String TableName = "tageGroups";
+	private static final String TableName = "tagGroups";
 	private static final String[] ColumnNames = new String[] {
 		"attributeID", "name", "info", "relactionLevel"
 	};
@@ -15,7 +15,7 @@ public class TagGroupDao extends BaseDao<TagDao> {
 			+ "id bigint not null,"
 			+ "attributeID bigint not null"
 			+ "name string not null,"
-			+ "info string not null,"
+			+ "info string,"
 			+ "relactionLevel int not null,"
 			+ "hide int not null,"
 			+ "primary key (id));";

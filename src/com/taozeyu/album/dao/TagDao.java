@@ -15,7 +15,7 @@ public class TagDao extends BaseDao<TagDao> {
 			+ "attributeID bigint not null,"
 			+ "tagGroupID bigint,"
 			+ "name string not null,"
-			+ "info string not null,"
+			+ "info string,"
 			+ "hide int not null,"
 			+ "primary key (id));";
 	
