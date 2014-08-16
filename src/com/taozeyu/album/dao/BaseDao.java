@@ -6,6 +6,7 @@ import java.lang.reflect.Modifier;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,13 +32,19 @@ abstract class BaseDao<C extends BaseDao<C>> {
 	};
 	
 	private static final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, Method>> setterContainer = new ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, Method>>();
-
 	private static final ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, Method>> getterContainer = new ConcurrentHashMap<Class<?>, ConcurrentHashMap<String, Method>>();
-
+	
+	private final HashMap<Class<?>, String> belongsColumnMap;
+	
 	private final DatabaseManager dbmanager;
 	
 	protected BaseDao(DatabaseManager dbmanager) {
+		this(dbmanager, new HashMap<Class<?>, String>());
+	}
+	
+	protected BaseDao(DatabaseManager dbmanager, HashMap<Class<?>, String> belongsColumnMap) {
 		this.dbmanager = dbmanager;
+		this.belongsColumnMap = belongsColumnMap;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -51,17 +58,47 @@ abstract class BaseDao<C extends BaseDao<C>> {
 			throw new RuntimeException(e);
 		}
 	}
+
+	public <CT extends BaseDao<C>> List<CT> getChildren(Class<CT> type) {
+		return getChildren(new LinkedList<CT>(), type, null);
+	}
+	
+	public <CT extends BaseDao<C>> List<CT> getChildren(Class<CT> type, String orderby) {
+		return getChildren(new LinkedList<CT>(), type, orderby);
+	}
+	
+	public <CT extends BaseDao<C>> List<CT> getChildren(List<CT> containerList, Class<CT> type) {
+		return getChildren(containerList, type, null);
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public <CT extends BaseDao<C>> List<CT> getChildren(List<CT> containerList, Class<CT> type, String orderby) {
+		
+		String columnName = belongsColumnMap.get(type);
+		
+		if(columnName == null) {
+			return null;
+		}
+		try {
+			BaseDao dao = (BaseDao) type.getField("manager").get(null);
+			return dao.findAll(containerList, columnName + " = ?", orderby, this.id);
+			
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+	}
 	
 	public C findById(long id) throws SQLException {
-		return findAll(new LinkedList<C>(), "id = ?", id).get(0);
+		return find("id = ?", null, id);
 	}
 	
 	public C find(String condition, Object...args) throws SQLException {
-		return findAll(new LinkedList<C>(), condition, args).get(0);
+		return find(condition, null, args);
 	}
 	
 	public C find(String condition, String orderby, Object...args) throws SQLException {
-		return findAll(new LinkedList<C>(), condition, orderby, args).get(0);
+		List<C> rslist = findAll(new LinkedList<C>(), condition, orderby, args);
+		return rslist.isEmpty()? null: rslist.get(0);
 	}
 	
 	public List<C> findAll(List<C> containerList) throws SQLException {
@@ -97,7 +134,7 @@ abstract class BaseDao<C extends BaseDao<C>> {
 		if(args == null) {
 			args = new Object[] {};
 		}
-		condition = condition.replace("\\?", "%s");
+		condition = condition.replace("?", "%s");
 		
 		try{
 			StringBuilder sql = new StringBuilder();
@@ -282,22 +319,21 @@ abstract class BaseDao<C extends BaseDao<C>> {
 		}
 	}
 	
-	private static final String[][] Transferred = new String[][] {
-		new String[]{"\"", "\\\""},
-		new String[]{"'", "\\'"},
-		new String[]{"\n", "\\n"},
-		new String[]{"\t", "\\t"},
-	};
-	
 	private String decorator(Object value) {
 		if(value == null) {
 			return "NULL";
 		} else if(value instanceof String){
-			String strValue = (String) value;
-			for(String[] t:Transferred) {
-				strValue = strValue.replaceAll(t[0], t[1]);
-			}
-			return "'" + strValue + "'";
+			String keyWord = (String) value;
+			keyWord = keyWord.replace("/", "//");  
+		    keyWord = keyWord.replace("'", "''");  
+		    keyWord = keyWord.replace("[", "/[");  
+		    keyWord = keyWord.replace("]", "/]");  
+		    keyWord = keyWord.replace("%", "/%");  
+		    keyWord = keyWord.replace("&","/&");  
+		    keyWord = keyWord.replace("_", "/_");  
+		    keyWord = keyWord.replace("(", "/(");  
+		    keyWord = keyWord.replace(")", "/)");  
+			return "'" + keyWord + "'";
 		} else {
 			return value.toString();
 		}

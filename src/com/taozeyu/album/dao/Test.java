@@ -8,9 +8,8 @@ public class Test {
 		
 		ImageAttributeDao bean = ImageAttributeDao.manager.create();
 		
-		bean.setName("法克鱿");
-		bean.setInfo("就是一种鱿鱼");
-		
+		bean = ImageAttributeDao.manager.findById(1);
+		bean.setInfo("\"好人\" \'真好\'");
 		bean.save();
 	}
 }
