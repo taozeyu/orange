@@ -15,11 +15,11 @@ public class SearchConditionList extends AbstractListModel<SearchAttributeView> 
 		int oldLen = this.list.size();
 		int newLen = list.size();
 		this.list = list;
-		this.fireContentsChanged(null, 0, Math.min(oldLen, newLen) - 1);
+		this.fireContentsChanged(this, 0, Math.min(oldLen, newLen) - 1);
 		if(oldLen > newLen) {
-			this.fireIntervalRemoved(null, newLen, oldLen);
+			this.fireIntervalRemoved(this, newLen, oldLen);
 		} else if(oldLen < newLen) {
-			this.fireIntervalAdded(null, oldLen, newLen);
+			this.fireIntervalAdded(this, oldLen, newLen);
 		}
 	}
 	

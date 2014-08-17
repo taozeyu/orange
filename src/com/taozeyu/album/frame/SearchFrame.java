@@ -7,6 +7,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
+import javax.swing.ListCellRenderer;
 import javax.swing.WindowConstants;
 
 import org.dyno.visual.swing.layouts.Constraints;
@@ -27,15 +28,21 @@ public class SearchFrame extends JFrame {
 	
 	private final ComboBoxModel<String> searchItemList;
 	private final SearchConditionList searchConditionList;
+	private final ListCellRenderer<SearchAttributeView> listCellRenderer;
 	
-	public SearchFrame(ComboBoxModel<String> searchItemList, SearchConditionList searchConditionList) {
+	public SearchFrame(
+			ComboBoxModel<String> searchItemList,
+			SearchConditionList searchConditionList,
+			ListCellRenderer<SearchAttributeView> listCellRenderer
+	) {
 		this.searchItemList = searchItemList;
 		this.searchConditionList = searchConditionList;
+		this.listCellRenderer = listCellRenderer;
 		initComponents();
 	}
 	
 	public SearchFrame() {
-		this(new DefaultComboBoxModel<String>(), new SearchConditionList());
+		this(new DefaultComboBoxModel<String>(), new SearchConditionList(), null);
 	}
 
 	private void initComponents() {
@@ -107,6 +114,9 @@ public class SearchFrame extends JFrame {
 		if (lstConditionContent == null) {
 			lstConditionContent = new JList<SearchAttributeView>();
 			lstConditionContent.setModel(searchConditionList);
+			if(listCellRenderer != null) {
+				lstConditionContent.setCellRenderer(listCellRenderer);
+			}
 		}
 		return lstConditionContent;
 	}

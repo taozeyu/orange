@@ -56,6 +56,7 @@ public class SearchLogic {
 				idmap.put(bean.getId(), view);
 			}
 		}
+		searchConditionList.resetContent(attrArray);
 	}
 	
 	private SearchAttributeView translateFrom(AttributeDao bean, Map<Long, SearchAttributeView> idmap) throws SQLException {
