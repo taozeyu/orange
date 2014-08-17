@@ -1,5 +1,6 @@
 package com.taozeyu.album;
 
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
 import java.awt.event.MouseAdapter;
@@ -16,7 +17,9 @@ import java.util.Map;
 
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.ListCellRenderer;
 
 import com.taozeyu.album.dao.AttributeDao;
 import com.taozeyu.album.dao.TagDao;
@@ -38,7 +41,20 @@ public class SearchLogic {
 	public SearchLogic() throws SQLException {
 		this.searchConditionList = new SearchConditionList();
 		this.searchItemList = new DefaultComboBoxModel<String>();
-		this.frame = new SearchFrame(searchItemList, searchConditionList);
+		this.frame = new SearchFrame(
+				searchItemList, searchConditionList,
+				new ListCellRenderer<SearchAttributeView>() {
+
+					@Override
+					public Component getListCellRendererComponent(
+							JList<? extends SearchAttributeView> list,
+							SearchAttributeView value, int index,
+							boolean isSelected, boolean cellHasFocus) {
+						
+						return value;
+					}
+				}
+		);
 	}
 	
 	private void initPanel() throws SQLException {

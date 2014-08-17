@@ -104,7 +104,10 @@ public class SearchFrame extends JFrame {
 
 	private JScrollPane getJScrollPane0() {
 		if (jScrollPane0 == null) {
-			jScrollPane0 = new JScrollPane();
+			jScrollPane0 = new JScrollPane(
+					JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
+			);
 			jScrollPane0.setViewportView(getJList0());
 		}
 		return jScrollPane0;
