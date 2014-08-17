@@ -1,7 +1,7 @@
 package com.taozeyu.album.frame;
 
+import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.DefaultListModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
@@ -17,14 +17,24 @@ public class SearchFrame extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JButton btnSaveCondition;
-	private JList lstConditionContent;
+	private JList<SearchAttributeView> lstConditionContent;
 	private JScrollPane jScrollPane0;
-	private JButton jButton1;
-	private JButton jButton2;
-	private JButton jButton3;
-	private JComboBox cbSearchCondition;
-	public SearchFrame() {
+	private JButton btnLoadFromDir;
+	private JButton btnLoadFromFile;
+	private JButton btnSearch;
+	private JComboBox<String> cbSearchCondition;
+	
+	private final ComboBoxModel<String> searchItemList;
+	private final SearchConditionList searchConditionList;
+	
+	public SearchFrame(ComboBoxModel<String> searchItemList, SearchConditionList searchConditionList) {
+		this.searchItemList = searchItemList;
+		this.searchConditionList = searchConditionList;
 		initComponents();
+	}
+	
+	public SearchFrame() {
+		this(new DefaultComboBoxModel<String>(), new SearchConditionList());
 	}
 
 	private void initComponents() {
@@ -34,45 +44,53 @@ public class SearchFrame extends JFrame {
 		setLayout(new GroupLayout());
 		add(getBtnSaveCondition(), new Constraints(new Leading(401, 12, 12), new Leading(12, 24, 12, 12)));
 		add(getJScrollPane0(), new Constraints(new Leading(13, 500, 12, 12), new Leading(43, 358, 10, 10)));
-		add(getJButton1(), new Constraints(new Leading(13, 122, 10, 10), new Leading(409, 12, 12)));
-		add(getjButton2(), new Constraints(new Leading(149, 10, 10), new Leading(409, 12, 12)));
-		add(getJButton3(), new Constraints(new Leading(430, 83, 12, 12), new Leading(409, 12, 12)));
-		add(getJComboBox0(), new Constraints(new Leading(13, 376, 12, 12), new Leading(9, 12, 12)));
+		add(getBtnLoadFromDir(), new Constraints(new Leading(13, 122, 10, 10), new Leading(409, 12, 12)));
+		add(getBtnLoadFromFile(), new Constraints(new Leading(149, 10, 10), new Leading(409, 12, 12)));
+		add(getBtnSearch(), new Constraints(new Leading(430, 83, 12, 12), new Leading(409, 12, 12)));
+		add(getCbSearchCondition(), new Constraints(new Leading(13, 376, 12, 12), new Leading(9, 12, 12)));
 		setSize(526, 447);
 	}
 
-	private JComboBox getJComboBox0() {
+	public JButton getBtnSaveCondition() {
+		if (btnSaveCondition == null) {
+			btnSaveCondition = new JButton();
+			btnSaveCondition.setText("保存搜索条件");
+		}
+		return btnSaveCondition;
+	}
+
+	public JComboBox<String> getCbSearchCondition() {
 		if (cbSearchCondition == null) {
-			cbSearchCondition = new JComboBox();
-			cbSearchCondition.setModel(new DefaultComboBoxModel(new Object[] { "item0" }));
+			cbSearchCondition = new JComboBox<String>();
+			cbSearchCondition.setModel(this.searchItemList);
 			cbSearchCondition.setDoubleBuffered(false);
 			cbSearchCondition.setBorder(null);
 		}
 		return cbSearchCondition;
 	}
 
-	private JButton getJButton3() {
-		if (jButton3 == null) {
-			jButton3 = new JButton();
-			jButton3.setText("搜索");
+	public JButton getBtnSearch() {
+		if (btnSearch == null) {
+			btnSearch = new JButton();
+			btnSearch.setText("搜索");
 		}
-		return jButton3;
+		return btnSearch;
 	}
 
-	private JButton getjButton2() {
-		if (jButton2 == null) {
-			jButton2 = new JButton();
-			jButton2.setText("图片文件导入");
+	public JButton getBtnLoadFromFile() {
+		if (btnLoadFromFile == null) {
+			btnLoadFromFile = new JButton();
+			btnLoadFromFile.setText("图片文件导入");
 		}
-		return jButton2;
+		return btnLoadFromFile;
 	}
 
-	private JButton getJButton1() {
-		if (jButton1 == null) {
-			jButton1 = new JButton();
-			jButton1.setText("图片目录导入");
+	public JButton getBtnLoadFromDir() {
+		if (btnLoadFromDir == null) {
+			btnLoadFromDir = new JButton();
+			btnLoadFromDir.setText("图片目录导入");
 		}
-		return jButton1;
+		return btnLoadFromDir;
 	}
 
 	private JScrollPane getJScrollPane0() {
@@ -83,22 +101,12 @@ public class SearchFrame extends JFrame {
 		return jScrollPane0;
 	}
 
-	private JList getJList0() {
+	private JList<SearchAttributeView> getJList0() {
 		if (lstConditionContent == null) {
-			lstConditionContent = new JList();
-			DefaultListModel listModel = new DefaultListModel();
-			listModel.addElement("item0");
-			lstConditionContent.setModel(listModel);
+			lstConditionContent = new JList<SearchAttributeView>();
+			lstConditionContent.setModel(searchConditionList);
 		}
 		return lstConditionContent;
-	}
-
-	private JButton getBtnSaveCondition() {
-		if (btnSaveCondition == null) {
-			btnSaveCondition = new JButton();
-			btnSaveCondition.setText("保存搜索条件");
-		}
-		return btnSaveCondition;
 	}
 
 }
