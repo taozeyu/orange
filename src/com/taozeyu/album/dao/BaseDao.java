@@ -101,7 +101,7 @@ abstract class BaseDao<C extends BaseDao<C>> {
 	}
 	
 	public C findById(long id) throws SQLException {
-		return find("id = ?", null, id);
+		return find("id = ?", id);
 	}
 	
 	public C find(String condition, Object...args) throws SQLException {
@@ -322,8 +322,19 @@ abstract class BaseDao<C extends BaseDao<C>> {
 	protected void setValueByName(String name, Object value) {
 		Method method = getMethod(name, SetterPrevNames, setterContainer);
 		try{
+			if(value != null) {
+				Class<?> type = method.getParameters()[0].getType();
+				if(value instanceof Integer && type.equals(Long.class)) {
+					value = Long.valueOf((Integer)value);
+				} else if(value instanceof Float && type.equals(Double.class)) {
+					value = Double.valueOf((Float)value);
+				}
+			}
 			method.invoke(this, value);
 		}	catch(Exception e) {
+			System.err.println("invoke err from " + method.getDeclaringClass().getName());
+			System.err.println("set \"" + name + "\" " + value + " ("+(value == null?"void":value.getClass().getName())+")");
+			System.err.println(method);
 			throw new RuntimeException(e);
 		}
 	}

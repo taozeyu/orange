@@ -8,7 +8,7 @@ public class AttributeDao extends BaseDao<AttributeDao> {
 	
 	private static final String TableName = "attributes";
 	private static final String[] ColumnNames = new String[] {
-		"name", "info", "hide", "importance"
+		"name", "info", "hide", "importance", "dependTagID"
 	};
 	
 	private static final HashMap<Class<?>, String> BelongsColumnMap = new HashMap<>();

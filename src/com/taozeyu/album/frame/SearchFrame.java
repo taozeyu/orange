@@ -7,6 +7,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
+import javax.swing.WindowConstants;
 
 import org.dyno.visual.swing.layouts.Constraints;
 import org.dyno.visual.swing.layouts.GroupLayout;
@@ -39,6 +40,7 @@ public class SearchFrame extends JFrame {
 
 	private void initComponents() {
 		setTitle("éÙ×ÓÏà²á - ËÑË÷");
+		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		setResizable(false);
 		setAlwaysOnTop(true);
 		setLayout(new GroupLayout());
@@ -48,7 +50,7 @@ public class SearchFrame extends JFrame {
 		add(getBtnLoadFromFile(), new Constraints(new Leading(149, 10, 10), new Leading(409, 12, 12)));
 		add(getBtnSearch(), new Constraints(new Leading(430, 83, 12, 12), new Leading(409, 12, 12)));
 		add(getCbSearchCondition(), new Constraints(new Leading(13, 376, 12, 12), new Leading(9, 12, 12)));
-		setSize(526, 447);
+		setSize(532, 476);
 	}
 
 	public JButton getBtnSaveCondition() {

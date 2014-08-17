@@ -45,6 +45,21 @@ class ConfigLoader {
 		}
 	}
 	
+	void load() throws SQLException {
+		boolean hasComplete = false;
+		try{
+			searchVisiable();
+			hasComplete = true;
+			
+		} finally {
+			if(hasComplete) {
+				DatabaseManager.getInstance().commit();
+			} else {
+				DatabaseManager.getInstance().rollback();
+			}
+		}
+	}
+	
 	private void searchVisiable() throws SQLException {
 		
 		visiableAttributeIDs = new HashSet<Long>();
