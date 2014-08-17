@@ -1,14 +1,16 @@
 package com.taozeyu.album.frame;
 
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JList;
-import javax.swing.JScrollPane;
+import javax.swing.JPanel;
 import javax.swing.ListCellRenderer;
 import javax.swing.WindowConstants;
+import javax.swing.border.EtchedBorder;
 
 import org.dyno.visual.swing.layouts.Constraints;
 import org.dyno.visual.swing.layouts.GroupLayout;
@@ -19,30 +21,26 @@ public class SearchFrame extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JButton btnSaveCondition;
-	private JList<SearchAttributeView> lstConditionContent;
-	private JScrollPane jScrollPane0;
 	private JButton btnLoadFromDir;
 	private JButton btnLoadFromFile;
 	private JButton btnSearch;
 	private JComboBox<String> cbSearchCondition;
 	
 	private final ComboBoxModel<String> searchItemList;
-	private final SearchConditionList searchConditionList;
 	private final ListCellRenderer<SearchAttributeView> listCellRenderer;
+	private JPanel searchViewPanel;
 	
 	public SearchFrame(
 			ComboBoxModel<String> searchItemList,
-			SearchConditionList searchConditionList,
 			ListCellRenderer<SearchAttributeView> listCellRenderer
 	) {
 		this.searchItemList = searchItemList;
-		this.searchConditionList = searchConditionList;
 		this.listCellRenderer = listCellRenderer;
 		initComponents();
 	}
 	
 	public SearchFrame() {
-		this(new DefaultComboBoxModel<String>(), new SearchConditionList(), null);
+		this(new DefaultComboBoxModel<String>(), null);
 	}
 
 	private void initComponents() {
@@ -52,12 +50,21 @@ public class SearchFrame extends JFrame {
 		setAlwaysOnTop(true);
 		setLayout(new GroupLayout());
 		add(getBtnSaveCondition(), new Constraints(new Leading(401, 12, 12), new Leading(12, 24, 12, 12)));
-		add(getJScrollPane0(), new Constraints(new Leading(13, 500, 12, 12), new Leading(43, 358, 10, 10)));
 		add(getBtnLoadFromDir(), new Constraints(new Leading(13, 122, 10, 10), new Leading(409, 12, 12)));
 		add(getBtnLoadFromFile(), new Constraints(new Leading(149, 10, 10), new Leading(409, 12, 12)));
 		add(getBtnSearch(), new Constraints(new Leading(430, 83, 12, 12), new Leading(409, 12, 12)));
 		add(getCbSearchCondition(), new Constraints(new Leading(13, 376, 12, 12), new Leading(9, 12, 12)));
+		add(getSearchViewPanel(), new Constraints(new Leading(12, 501, 12, 12), new Leading(46, 354, 10, 10)));
 		setSize(532, 476);
+	}
+
+	public JPanel getSearchViewPanel() {
+		if (searchViewPanel == null) {
+			searchViewPanel = new JPanel();
+			searchViewPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED, null, null));
+			searchViewPanel.setLayout(new BoxLayout(searchViewPanel, BoxLayout.Y_AXIS));
+		}
+		return searchViewPanel;
 	}
 
 	public JButton getBtnSaveCondition() {
@@ -100,28 +107,6 @@ public class SearchFrame extends JFrame {
 			btnLoadFromDir.setText("Í¼Æ¬Ä¿Â¼µ¼Èë");
 		}
 		return btnLoadFromDir;
-	}
-
-	private JScrollPane getJScrollPane0() {
-		if (jScrollPane0 == null) {
-			jScrollPane0 = new JScrollPane(
-					JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-					JScrollPane.HORIZONTAL_SCROLLBAR_NEVER
-			);
-			jScrollPane0.setViewportView(getJList0());
-		}
-		return jScrollPane0;
-	}
-
-	private JList<SearchAttributeView> getJList0() {
-		if (lstConditionContent == null) {
-			lstConditionContent = new JList<SearchAttributeView>();
-			lstConditionContent.setModel(searchConditionList);
-			if(listCellRenderer != null) {
-				lstConditionContent.setCellRenderer(listCellRenderer);
-			}
-		}
-		return lstConditionContent;
 	}
 
 }

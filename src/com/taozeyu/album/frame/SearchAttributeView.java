@@ -116,11 +116,12 @@ public class SearchAttributeView extends JPanel {
 		setBorder(BorderFactory.createTitledBorder(this.name));
 		setLayout(new FlowLayout());
 		
-		for(final TagNode tag:this.tags) {
+		for(int i=0; i<this.tags.length; ++i) {
+			final TagNode tag = this.tags[i];
 			JPanel childPanel = new JPanel();
 			final JComboBox<TagState> cb = new JComboBox<>(getDefaultVecotr());
 			childPanel.add(cb);
-			childPanel.add(new JLabel(tag.name));
+			childPanel.add(new JLabel(" "+tag.name+"	"));
 			childPanel.setToolTipText(tag.info);
 			
 			cb.addItemListener(new ItemListener() {
@@ -137,7 +138,7 @@ public class SearchAttributeView extends JPanel {
 				}
 			});
 			add(childPanel);
-			add(new JButton("บร"));
+			
 		}
 	}
 

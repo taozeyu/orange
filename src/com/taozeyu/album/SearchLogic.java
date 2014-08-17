@@ -8,7 +8,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -19,6 +18,7 @@ import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.ListCellRenderer;
 
 import com.taozeyu.album.dao.AttributeDao;
@@ -26,7 +26,6 @@ import com.taozeyu.album.dao.TagDao;
 import com.taozeyu.album.frame.SearchAttributeView;
 import com.taozeyu.album.frame.SearchAttributeView.DepandNode;
 import com.taozeyu.album.frame.SearchAttributeView.TagNode;
-import com.taozeyu.album.frame.SearchConditionList;
 import com.taozeyu.album.frame.SearchFrame;
 
 public class SearchLogic {
@@ -34,15 +33,13 @@ public class SearchLogic {
 	private final SearchFrame frame;
 
 	private final ComboBoxModel<String> searchItemList;
-	private final SearchConditionList searchConditionList;
 	
 	private boolean hasInitFrame = false;
 	
 	public SearchLogic() throws SQLException {
-		this.searchConditionList = new SearchConditionList();
 		this.searchItemList = new DefaultComboBoxModel<String>();
 		this.frame = new SearchFrame(
-				searchItemList, searchConditionList,
+				searchItemList,
 				new ListCellRenderer<SearchAttributeView>() {
 
 					@Override
@@ -62,17 +59,19 @@ public class SearchLogic {
 		List<AttributeDao> list = AttributeDao.manager.findAll(
 				new LinkedList<AttributeDao>(), "hide = 0", "id"
 		);
-		ArrayList<SearchAttributeView> attrArray = new ArrayList<SearchAttributeView>(list.size());
+		JPanel panel = frame.getSearchViewPanel();
+		panel.removeAll();
+		
 		HashMap<Long, SearchAttributeView> idmap = new HashMap<Long, SearchAttributeView>();
 		
 		for(AttributeDao bean:list) {
 			SearchAttributeView view = translateFrom(bean, idmap);
 			if(view != null) {
-				attrArray.add(view);
+				panel.add(view);
 				idmap.put(bean.getId(), view);
 			}
 		}
-		searchConditionList.resetContent(attrArray);
+		panel.repaint();
 	}
 	
 	private SearchAttributeView translateFrom(AttributeDao bean, Map<Long, SearchAttributeView> idmap) throws SQLException {
@@ -92,7 +91,7 @@ public class SearchLogic {
 			ConfigLoader config = AlbumManager.instance().getConfigLoader();
 			long depnedID = bean.getDependTagID();
 			TagDao tagBean = TagDao.manager.findById(depnedID);
-			if(config.isTagVisiable(tagBean.getId()) || config.isAttributeVisiable(tagBean.getAttributeID())) {
+			if(!config.isTagVisiable(tagBean.getId()) || !config.isAttributeVisiable(tagBean.getAttributeID())) {
 				return null;
 			}
 			SearchAttributeView view = idmap.get(tagBean.getAttributeID());
