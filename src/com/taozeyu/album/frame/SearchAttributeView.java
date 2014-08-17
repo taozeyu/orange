@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.Vector;
 
 import javax.swing.BorderFactory;
-import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -130,18 +129,41 @@ public class SearchAttributeView extends JPanel {
 					TagState state = (TagState) cb.getSelectedItem();
 					tag.state = state;
 					
-					boolean dependEnabled = (state == TagState.Exclude) && SearchAttributeView.this.isEnabled();
+					boolean dependEnabled = (state != TagState.Exclude) && SearchAttributeView.this.isEnabled();
 					
 					for(SearchAttributeView view : tag.dependOnList) {
-						view.setEnabled(dependEnabled);
+						view.setAllEnabled(dependEnabled);
 					}
 				}
 			});
 			add(childPanel);
-			
 		}
 	}
 
+	@Override
+	public void setEnabled(boolean value) {
+		super.setEnabled(value);
+		
+		if(value) {
+			setToolTipText(info);
+		} else {
+			if(depend != null) {
+				setToolTipText("需要\""+depend.getView().name + "\"包含\""+depend.getTag().name+"\"才能使用");
+			}
+		}
+	}
+	
+	private void setAllEnabled(boolean value) {
+		this.setEnabled(value);
+		
+		for(int i=0; i<this.getComponentCount(); ++i) {
+			JPanel panel = (JPanel) this.getComponent(i);
+			for(int j=0; j<panel.getComponentCount(); ++j) {
+				panel.getComponent(j).setEnabled(value);
+			}
+		}
+	}
+	
 	private Vector<TagState> getDefaultVecotr() {
 		return new Vector<TagState>(TagState.ShowList);
 	}

@@ -24,7 +24,7 @@ public class DatabaseManager {
 	}
 	
 	static void printSql(Object sql) {
-		if(instance.enablePrintSql) {
+		if(instance != null && instance.enablePrintSql) {
 			System.out.println(sql);
 		}
 	}

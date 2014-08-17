@@ -1,16 +1,14 @@
 package com.taozeyu.album.frame;
 
-import javax.swing.BorderFactory;
-import javax.swing.BoxLayout;
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.ListCellRenderer;
 import javax.swing.WindowConstants;
-import javax.swing.border.EtchedBorder;
 
 import org.dyno.visual.swing.layouts.Constraints;
 import org.dyno.visual.swing.layouts.GroupLayout;
@@ -28,8 +26,8 @@ public class SearchFrame extends JFrame {
 	
 	private final ComboBoxModel<String> searchItemList;
 	private final ListCellRenderer<SearchAttributeView> listCellRenderer;
+	private JScrollPane jScrollPane0;
 	private JPanel searchViewPanel;
-	
 	public SearchFrame(
 			ComboBoxModel<String> searchItemList,
 			ListCellRenderer<SearchAttributeView> listCellRenderer
@@ -54,17 +52,25 @@ public class SearchFrame extends JFrame {
 		add(getBtnLoadFromFile(), new Constraints(new Leading(149, 10, 10), new Leading(409, 12, 12)));
 		add(getBtnSearch(), new Constraints(new Leading(430, 83, 12, 12), new Leading(409, 12, 12)));
 		add(getCbSearchCondition(), new Constraints(new Leading(13, 376, 12, 12), new Leading(9, 12, 12)));
-		add(getSearchViewPanel(), new Constraints(new Leading(12, 501, 12, 12), new Leading(46, 354, 10, 10)));
+		add(getJScrollPane0(), new Constraints(new Leading(13, 500, 12, 12), new Leading(44, 355, 10, 10)));
 		setSize(532, 476);
 	}
 
 	public JPanel getSearchViewPanel() {
 		if (searchViewPanel == null) {
 			searchViewPanel = new JPanel();
-			searchViewPanel.setBorder(BorderFactory.createEtchedBorder(EtchedBorder.LOWERED, null, null));
-			searchViewPanel.setLayout(new BoxLayout(searchViewPanel, BoxLayout.Y_AXIS));
 		}
 		return searchViewPanel;
+	}
+
+	public JScrollPane getJScrollPane0() {
+		if (jScrollPane0 == null) {
+			jScrollPane0 = new JScrollPane();
+			jScrollPane0.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+			jScrollPane0.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+			jScrollPane0.setViewportView(getSearchViewPanel());
+		}
+		return jScrollPane0;
 	}
 
 	public JButton getBtnSaveCondition() {

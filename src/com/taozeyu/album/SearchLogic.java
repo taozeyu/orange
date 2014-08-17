@@ -62,16 +62,35 @@ public class SearchLogic {
 		JPanel panel = frame.getSearchViewPanel();
 		panel.removeAll();
 		
+		int width = 490; //Swing是SB不想解释。。。
+		
+		panel.setLayout(null);
 		HashMap<Long, SearchAttributeView> idmap = new HashMap<Long, SearchAttributeView>();
+		
+		int startY = 0;
 		
 		for(AttributeDao bean:list) {
 			SearchAttributeView view = translateFrom(bean, idmap);
 			if(view != null) {
+				int height = countRealHeight(view, width);
+				view.setLocation(0, startY);
+				view.setSize(width, height);
 				panel.add(view);
+				panel.setPreferredSize(new Dimension(0, 0));
 				idmap.put(bean.getId(), view);
+				startY += height;
 			}
 		}
-		panel.repaint();
+		panel.setPreferredSize(new Dimension(width, startY));
+	}
+	
+	private int countRealHeight(SearchAttributeView view, int width) {
+		Dimension size = view.getMinimumSize();
+		int rows = size.width / width;
+		if(size.width % width != 0) {
+			rows += 1;
+		}
+		return rows * size.height;
 	}
 	
 	private SearchAttributeView translateFrom(AttributeDao bean, Map<Long, SearchAttributeView> idmap) throws SQLException {
