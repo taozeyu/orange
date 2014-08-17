@@ -351,18 +351,23 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 			throw e;
 			
 		} finally {
-			setWaitingTask();
-			if(is != null) {
-				is.close();
+			
+			try{
+				if(image == null) {
+					image = FailImage;
+				}
+				synchronized (windowLock) {
+					insertImageToWindow(image, toWindowIndex(task.targetIndex));
+				}
+				loadedImage(image, task.targetIndex);
+				
+			} finally {
+				setWaitingTask();
+				if(is != null) {
+					is.close();
+				}
 			}
 		}
-		if(image == null) {
-			image = FailImage;
-		}
-		synchronized (windowLock) {
-			insertImageToWindow(image, toWindowIndex(task.targetIndex));
-		}
-		loadedImage(image, task.targetIndex);
 	}
 	
 	private void insertImageToWindow(Image image, int index) {
