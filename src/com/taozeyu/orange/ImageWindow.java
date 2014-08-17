@@ -327,20 +327,18 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 			return;
 		}
 		S source = sourceList.get(task.targetIndex);
-		InputStream is = new InterruptInputStream(source.getInputStream(), task.targetIndex);
+		InputStream is = null;
+
+		Image image = null;
 		
 		try{
-			setStartTask();
-			Image image = ImageIO.read(is);
+			is = source.getInputStream();
 			
-			if(image == null) {
-				image = FailImage;
+			if(is != null) {
+				is = new InterruptInputStream(is, task.targetIndex);
+				setStartTask();
+				image = ImageIO.read(is);
 			}
-			
-			synchronized (windowLock) {
-				insertImageToWindow(image, toWindowIndex(task.targetIndex));
-			}
-			loadedImage(image, task.targetIndex);
 			
 		} catch(RuntimeException e) {
 			
@@ -354,8 +352,17 @@ public class ImageWindow<S extends ImageWindow.ImageSource> {
 			
 		} finally {
 			setWaitingTask();
-			is.close();
+			if(is != null) {
+				is.close();
+			}
 		}
+		if(image == null) {
+			image = FailImage;
+		}
+		synchronized (windowLock) {
+			insertImageToWindow(image, toWindowIndex(task.targetIndex));
+		}
+		loadedImage(image, task.targetIndex);
 	}
 	
 	private void insertImageToWindow(Image image, int index) {

@@ -34,7 +34,7 @@ public class ImageView<S extends ImageWindow.ImageSource> extends JPanel {
 	
 	private HashMap<Component, Integer> childrenLocation = new HashMap<Component, Integer>();
 	
-	private interface ImageChangeListeners<S extends ImageWindow.ImageSource> {
+	public interface ImageChangeListeners<S extends ImageWindow.ImageSource> {
 		void onImageChange(Image image, S imageSource);
 	}
 	
@@ -161,6 +161,10 @@ public class ImageView<S extends ImageWindow.ImageSource> extends JPanel {
 						setImage(image);
 						resetCameraButKeepScale();
 						repaint();
+						
+						if(listeners != null) {
+							listeners.onImageChange(image, imageSource);
+						}
 					}
 				});
 			}

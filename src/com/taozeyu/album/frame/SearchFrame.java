@@ -45,7 +45,6 @@ public class SearchFrame extends JFrame {
 		setTitle("éÙ×ÓÏà²á - ËÑË÷");
 		setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
 		setResizable(false);
-		setAlwaysOnTop(true);
 		setLayout(new GroupLayout());
 		add(getBtnSaveCondition(), new Constraints(new Leading(401, 12, 12), new Leading(12, 24, 12, 12)));
 		add(getBtnLoadFromDir(), new Constraints(new Leading(13, 122, 10, 10), new Leading(409, 12, 12)));

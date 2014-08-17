@@ -358,14 +358,7 @@ abstract class BaseDao<C extends BaseDao<C>> {
 		} else if(value instanceof String){
 			String keyWord = (String) value;
 			keyWord = keyWord.replace("/", "//");  
-		    keyWord = keyWord.replace("'", "''");  
-		    keyWord = keyWord.replace("[", "/[");  
-		    keyWord = keyWord.replace("]", "/]");  
-		    keyWord = keyWord.replace("%", "/%");  
-		    keyWord = keyWord.replace("&","/&");  
-		    keyWord = keyWord.replace("_", "/_");  
-		    keyWord = keyWord.replace("(", "/(");  
-		    keyWord = keyWord.replace(")", "/)");  
+		    keyWord = keyWord.replace("'", "''");
 			return "'" + keyWord + "'";
 		} else {
 			return value.toString();

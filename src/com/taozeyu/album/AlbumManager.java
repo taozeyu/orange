@@ -10,6 +10,7 @@ import java.sql.SQLException;
 import javax.swing.JOptionPane;
 
 import com.taozeyu.album.dao.DatabaseManager;
+import com.taozeyu.album.frame.AlbumFrame;
 
 public class AlbumManager {
 
@@ -22,11 +23,13 @@ public class AlbumManager {
 	private final DatabaseManager dbManager;
 	private final SearchLogic searchLogic;
 	private final ConfigLoader configLoader;
+	private final AlbumFrame albumFrame;
 	
 	private AlbumManager(String dbpath) throws ClassNotFoundException, SQLException {
 		this.dbManager = new DatabaseManager(dbpath);
 		this.searchLogic = new SearchLogic();
 		this.configLoader = new ConfigLoader();
+		this.albumFrame = new AlbumFrame();
 		
 		dbManager.setEnablePrintSql(false);
 	}
@@ -37,6 +40,8 @@ public class AlbumManager {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		albumFrame.close();
+		
 		System.exit(0);
 	}
 	
@@ -46,6 +51,14 @@ public class AlbumManager {
 
 	public ConfigLoader getConfigLoader() {
 		return configLoader;
+	}
+
+	public AlbumFrame getAlbumFrame() {
+		return albumFrame;
+	}
+
+	public DatabaseManager getDbManager() {
+		return dbManager;
 	}
 
 	private void synchronize() throws IOException, SQLException {
