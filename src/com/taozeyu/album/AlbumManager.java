@@ -27,6 +27,8 @@ public class AlbumManager {
 		this.dbManager = new DatabaseManager(dbpath);
 		this.searchLogic = new SearchLogic();
 		this.configLoader = new ConfigLoader();
+		
+		dbManager.setEnablePrintSql(false);
 	}
 	
 	public void dispose() {

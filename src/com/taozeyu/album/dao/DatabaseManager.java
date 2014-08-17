@@ -17,6 +17,18 @@ public class DatabaseManager {
 		return instance;
 	}
 
+	private boolean enablePrintSql = true;
+	
+	public void setEnablePrintSql(boolean value) {
+		enablePrintSql = value;
+	}
+	
+	static void printSql(Object sql) {
+		if(instance.enablePrintSql) {
+			System.out.println(sql);
+		}
+	}
+	
 	private static final Class<?>[] DaoClassList = new Class<?>[] {
 		AttributeDao.class,
 		ImageAttributeDao.class,
@@ -120,9 +132,9 @@ public class DatabaseManager {
 							dao.getTableName() + "_index",
 							dao.getTableName()
 					);
-					System.out.println(sqlCreateTable);
+					printSql(sqlCreateTable);
 					s.execute(sqlCreateTable);
-					System.out.println(sqlCreateIndex);
+					printSql(sqlCreateIndex);
 					s.execute(sqlCreateIndex);
 				}
 			}

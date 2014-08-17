@@ -182,7 +182,7 @@ abstract class BaseDao<C extends BaseDao<C>> {
 				sql.append(" ");
 			}
 			sql.append(";");
-			System.out.println(sql);
+			DatabaseManager.printSql(sql);
 			
 			rs = s.executeQuery(sql.toString());
 			Constructor<C> constructor;
@@ -228,7 +228,7 @@ abstract class BaseDao<C extends BaseDao<C>> {
 			sql.append(id);
 			sql.append(";");
 			
-			System.out.println(sql);
+			DatabaseManager.printSql(sql);
 			s.executeUpdate(sql.toString());
 			
 		} finally {
@@ -272,7 +272,7 @@ abstract class BaseDao<C extends BaseDao<C>> {
 				sql.append(nextID);
 				sql.append(");");
 
-				System.out.println(sql);
+				DatabaseManager.printSql(sql);
 				s.executeUpdate(sql.toString());
 				
 				id = nextID;
@@ -296,7 +296,7 @@ abstract class BaseDao<C extends BaseDao<C>> {
 				sql.append(id);
 				sql.append(";");
 				
-				System.out.println(sql);
+				DatabaseManager.printSql(sql);
 				s.executeUpdate(sql.toString());
 			}
 		} finally {
