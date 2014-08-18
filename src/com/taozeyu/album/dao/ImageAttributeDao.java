@@ -47,11 +47,13 @@ public class ImageAttributeDao extends BaseDao<ImageAttributeDao> {
 	public void setAttributeID(long attributeID) {
 		this.attributeID = attributeID;
 	}
-
+	
+	/** 0 未定	1 确定	2 忽略*/
 	public int getState() {
 		return state;
 	}
 
+	/** 0 未定	1 确定	2 忽略*/
 	public void setState(int state) {
 		this.state = state;
 	}

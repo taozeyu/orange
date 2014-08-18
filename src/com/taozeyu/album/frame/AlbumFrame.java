@@ -2,6 +2,8 @@ package com.taozeyu.album.frame;
 
 import java.awt.Color;
 import java.awt.Image;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.BufferedInputStream;
@@ -44,7 +46,36 @@ public class AlbumFrame extends JFrame {
 				}
 			}
 		});
+		this.addKeyListener(keyAdapter);
 	}
+	
+	private final KeyAdapter keyAdapter = new KeyAdapter() {
+
+		@Override
+		public void keyReleased(KeyEvent evt) {
+			
+			if(evt.getKeyCode() == KeyEvent.VK_SPACE) {
+				
+				AlbumManager.instance().getTagEditorLogic().changeVisiable();
+				
+			} else if(evt.getKeyCode() == KeyEvent.VK_F5) {
+				int code = JOptionPane.showConfirmDialog(
+						AlbumFrame.this, "确定与标签配置文件.json同步一次？"
+				);
+				if(code == JOptionPane.OK_OPTION) {
+					try {
+						AlbumManager.instance().synchronize();
+					} catch(Exception e) {
+						e.printStackTrace();
+						JOptionPane.showMessageDialog(
+								AlbumFrame.this, "同步失败，抛出异常：" + e.getMessage(),
+								"橘子相册启动出错啦！", JOptionPane.ERROR_MESSAGE
+						);
+					}
+				}
+			}
+		}
+	};
 	
 	public void resetImageList(List<ImageDao> imageList) {
 		
@@ -68,6 +99,7 @@ public class AlbumFrame extends JFrame {
 			@Override
 			public void onImageChange(Image image, ImageSource imageSource) {
 				setTitle("橘子相册 - (" + imageSource.index + "/" + imagesNum + ") " + imageSource.filePath );
+				AlbumManager.instance().getTagEditorLogic().changeImageSource(imageSource);
 			}
 		});
 	}
@@ -82,9 +114,11 @@ public class AlbumFrame extends JFrame {
 		
 		private final String filePath;
 		private final int index;
+		private final long imageID;
 		
 		private ImageSource(ImageDao imageDao, int index) {
 			this.filePath = imageDao.getFilePath();
+			this.imageID = imageDao.getId();
 			this.index = index;
 		}
 
@@ -96,6 +130,10 @@ public class AlbumFrame extends JFrame {
 				System.err.println(e);
 				return null;
 			}
+		}
+
+		public long getImageID() {
+			return imageID;
 		}
 	}
 }

@@ -8,6 +8,7 @@ import java.nio.charset.Charset;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Set;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -98,6 +99,12 @@ class ConfigLoader {
 	
 	boolean isGroupVisiable(long id) {
 		return visiableGroupIDs.contains(id);
+	}
+	
+	Set<Long> listAllAttributeVisiableIDS() {
+		HashSet<Long> set = new HashSet<Long>();
+		set.addAll(visiableAttributeIDs);
+		return set;
 	}
 	
 	private void synFileRootArray(JSONArray json) throws SQLException {

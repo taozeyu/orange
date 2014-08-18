@@ -14,6 +14,8 @@ import com.taozeyu.album.frame.AlbumFrame;
 
 public class AlbumManager {
 
+	public static final int TagEditorShowItemsNum = 4;
+	
 	private static AlbumManager singleInstance = null;
 	
 	public static AlbumManager instance() {
@@ -24,12 +26,14 @@ public class AlbumManager {
 	private final SearchLogic searchLogic;
 	private final ConfigLoader configLoader;
 	private final AlbumFrame albumFrame;
+	private final TagEditorLogic tagEditorLogic;
 	
 	private AlbumManager(String dbpath) throws ClassNotFoundException, SQLException {
 		this.dbManager = new DatabaseManager(dbpath);
 		this.searchLogic = new SearchLogic();
 		this.configLoader = new ConfigLoader();
 		this.albumFrame = new AlbumFrame();
+		this.tagEditorLogic = new TagEditorLogic();
 		
 		dbManager.setEnablePrintSql(false);
 	}
@@ -61,7 +65,11 @@ public class AlbumManager {
 		return dbManager;
 	}
 
-	private void synchronize() throws IOException, SQLException {
+	public TagEditorLogic getTagEditorLogic() {
+		return tagEditorLogic;
+	}
+
+	public void synchronize() throws IOException, SQLException {
 		InputStream inputStream = new FileInputStream(new File(
 				System.getProperty("user.dir"), "tag_config.json"
 		));
