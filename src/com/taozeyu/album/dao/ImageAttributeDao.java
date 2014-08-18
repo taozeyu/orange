@@ -1,5 +1,6 @@
 package com.taozeyu.album.dao;
 
+
 public class ImageAttributeDao extends BaseDao<ImageAttributeDao> {
 
 	public static ImageAttributeDao manager = null;

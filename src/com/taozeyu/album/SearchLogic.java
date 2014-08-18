@@ -278,10 +278,19 @@ public class SearchLogic {
 			}
 		}
 		try {
-			String condition = "id NOT IN (SELECT imageID FROM imageTags WHERE tagID NOT IN (?)) OR id IN (SELECT imageID FROM imageTags WHERE tagID NOT IN (?))";
-			List<ImageDao> imageList = ImageDao.manager.findAll(
-					new ArrayList<ImageDao>(), condition, mustSet, excludeSet
-			);
+			String condition = "id IN (SELECT imageID FROM imageTags WHERE tagID NOT IN (?))";
+			
+			if(!mustSet.isEmpty()) {
+				condition += " AND id NOT IN (SELECT imageID FROM imageTags WHERE tagID IN (?))";
+			}
+			List<ImageDao> imageList;
+			
+			if(mustSet.isEmpty()) {
+				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), condition, excludeSet);
+			} else {
+				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), condition, excludeSet, mustSet);
+			}
+			
 			if(imageList.isEmpty()) {
 				JOptionPane.showMessageDialog(frame, "找不到任何符合条件的结果！", "信息", JOptionPane.PLAIN_MESSAGE);
 			}else {

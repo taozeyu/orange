@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import javax.swing.JOptionPane;
+
 import com.taozeyu.album.dao.AttributeDao;
 import com.taozeyu.album.dao.ImageAttributeDao;
 import com.taozeyu.album.dao.ImageTagDao;
@@ -23,6 +25,8 @@ public class TagEditorLogic {
 		frame.setVisible(!frame.isVisible());
 	}
 	
+	private long currImageID;
+	
 	public void changeImageSource(ImageSource imageSource) {
 		
 		frame.clearitems();
@@ -33,18 +37,62 @@ public class TagEditorLogic {
 			
 			changeVisiable();
 			changeVisiable();
+
+			AlbumManager.instance().getDbManager().commit();
+			this.currImageID = imageID;
 			
 		} catch (SQLException e) {
-			e.printStackTrace();
+
+			JOptionPane.showMessageDialog(frame, "提交失败，抛出异常：" + e.getMessage(),
+					"橘子相册出错啦！", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
 	public void onNotCareAttribute(AttributeDao attrBean) {
-		
+		try {
+			ImageAttributeDao imageAttr = ImageAttributeDao.manager.find(
+					"imageID = ? AND attributeID = ?", currImageID, attrBean.getId());
+			imageAttr.setState(2);
+			imageAttr.save();
+			AlbumManager.instance().getDbManager().commit();
+			
+		} catch (SQLException e) {
+			
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(frame, "提交失败，抛出异常：" + e.getMessage(),
+					"橘子相册出错啦！", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 	
 	public void onSubmitTags(AttributeDao attrBean, List<Long> tagIDList) {
-		
+		try {
+			ImageAttributeDao imageAttr = ImageAttributeDao.manager.find(
+					"imageID = ? AND attributeID = ?", currImageID, attrBean.getId());
+			imageAttr.setState(1);
+			imageAttr.save();
+			
+			List<ImageTagDao> imageTagList = ImageTagDao.manager.findAll(
+					new LinkedList<ImageTagDao>(),
+					"tagID in (SELECT id FROM tags WHERE attributeID = ?)",
+					imageAttr.getAttributeID()
+			);
+			for(ImageTagDao tagBean:imageTagList) {
+				tagBean.remove();
+			}
+			for(long tagID: tagIDList) {
+				ImageTagDao imageTag = ImageTagDao.manager.create();
+				imageTag.setImageID(currImageID);
+				imageTag.setTagID(tagID);
+				imageTag.save();
+			}
+			AlbumManager.instance().getDbManager().commit();
+			
+		} catch (SQLException e) {
+			
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(frame, "提交失败，抛出异常：" + e.getMessage(),
+					"橘子相册出错啦！", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 	
 	private List<ImageAttributeDao> findAttributes(long imageID) throws SQLException {
