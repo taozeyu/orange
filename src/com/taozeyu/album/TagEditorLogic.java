@@ -19,7 +19,7 @@ import com.taozeyu.album.frame.TagEditorFrame;
 
 public class TagEditorLogic {
 
-	private final TagEditorFrame frame = new TagEditorFrame();
+	private TagEditorFrame frame = new TagEditorFrame();
 	
 	public void changeVisiable() {
 		frame.setVisible(!frame.isVisible());
@@ -29,16 +29,17 @@ public class TagEditorLogic {
 	
 	public void changeImageSource(ImageSource imageSource) {
 		
-		frame.clearitems();
+		boolean lastFrameIsVisable = frame.isVisible();
+		frame.dispose();
+		frame = new TagEditorFrame();
+		frame.setVisible(lastFrameIsVisable);
+		
 		currImageID = imageSource.getImageID();
 		
 		try {
 			List<ImageAttributeDao> imageAttrList = findAttributes(currImageID);
 			chooseAndSetAttributes(imageAttrList);
 			
-			changeVisiable();
-			changeVisiable();
-
 			AlbumManager.instance().getDbManager().commit();
 			
 		} catch (SQLException e) {
@@ -183,7 +184,7 @@ public class TagEditorLogic {
 		
 		for(TagDao tag:tagsList) {
 			String name = tag.getName();
-			name = name.replaceAll("^\\(\\d+\\)\\s*", ""); //删除诸如(12)这样的序号
+			name = name.replaceAll("^\\(\\d+\\)", ""); //删除诸如(12)这样的序号
 		}
 		frame.addItem(attr, tagsList);
 	}

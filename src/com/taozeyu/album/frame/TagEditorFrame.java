@@ -82,10 +82,10 @@ public class TagEditorFrame extends JFrame {
 			itemPanel.add(childPanel);
 			jbcArray[i] = jcb;
 		}
-		JButton btnNotCare = new JButton("ºöÂÔ");
 		JButton btnSubmit = new JButton("Ìá½»");
+		JButton btnNotCare = new JButton("ºöÂÔ");
 		
-		btnNotCare.setSize(ButtonWidth, ButtonHeight);
+		btnNotCare.setSize(ButtonWidth, ButtonHeight * 3 /4);
 		btnSubmit.setSize(ButtonWidth, ButtonHeight);
 		
 		itemPanel.add(btnNotCare);
