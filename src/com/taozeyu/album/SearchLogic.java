@@ -278,17 +278,36 @@ public class SearchLogic {
 			}
 		}
 		try {
-			String condition = "id IN (SELECT imageID FROM imageTags WHERE tagID NOT IN (?))";
-			
-			if(!mustSet.isEmpty()) {
-				condition += " AND id NOT IN (SELECT imageID FROM imageTags WHERE tagID IN (?))";
-			}
 			List<ImageDao> imageList;
 			
-			if(mustSet.isEmpty()) {
-				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), condition, excludeSet);
+			if(mustSet.isEmpty() && excludeSet.isEmpty()) {
+				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>());
+				
 			} else {
-				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), condition, excludeSet, mustSet);
+				
+				LinkedList<Object> argsList = new LinkedList<Object>();
+				LinkedList<String> conditionList = new LinkedList<String>();
+				
+				if(!excludeSet.isEmpty()) {
+					argsList.add(excludeSet);
+					conditionList.add("id IN (SELECT imageID FROM imageTags WHERE tagID NOT IN (?))");
+				}
+				if(!mustSet.isEmpty()) {
+					argsList.add(mustSet);
+					conditionList.add("id IN (SELECT imageID FROM imageTags WHERE tagID IN (?))");
+				}
+				
+				String condition;
+				Object[] args = (Object[]) argsList.toArray(new Object[argsList
+						.size()]);
+				
+				if(conditionList.size() > 1) {
+					condition = conditionList.get(0) + " AND " + conditionList.get(1);
+				} else {
+					condition = conditionList.get(0);
+				}
+				
+				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), condition, args);
 			}
 			
 			if(imageList.isEmpty()) {

@@ -30,16 +30,16 @@ public class TagEditorLogic {
 	public void changeImageSource(ImageSource imageSource) {
 		
 		frame.clearitems();
-		long imageID = imageSource.getImageID();
+		currImageID = imageSource.getImageID();
+		
 		try {
-			List<ImageAttributeDao> imageAttrList = findAttributes(imageID);
+			List<ImageAttributeDao> imageAttrList = findAttributes(currImageID);
 			chooseAndSetAttributes(imageAttrList);
 			
 			changeVisiable();
 			changeVisiable();
 
 			AlbumManager.instance().getDbManager().commit();
-			this.currImageID = imageID;
 			
 		} catch (SQLException e) {
 
@@ -73,8 +73,8 @@ public class TagEditorLogic {
 			
 			List<ImageTagDao> imageTagList = ImageTagDao.manager.findAll(
 					new LinkedList<ImageTagDao>(),
-					"tagID in (SELECT id FROM tags WHERE attributeID = ?)",
-					imageAttr.getAttributeID()
+					"tagID in (SELECT id FROM tags WHERE attributeID = ? AND imageID = ?)",
+					imageAttr.getAttributeID(), currImageID
 			);
 			for(ImageTagDao tagBean:imageTagList) {
 				tagBean.remove();
@@ -101,6 +101,21 @@ public class TagEditorLogic {
 				new LinkedList<ImageAttributeDao>(), "imageID = ?", imageID);
 
 		ConfigLoader config = AlbumManager.instance().getConfigLoader();
+		
+		Set<Long> allVisiableAttrIDs = config.listAllAttributeVisiableIDS();
+		
+		for(ImageAttributeDao imageAttr:list) {
+			allVisiableAttrIDs.remove(imageAttr.getAttributeID());
+		}
+		for(long attrID:allVisiableAttrIDs) {
+			ImageAttributeDao imageAttr = ImageAttributeDao.manager.create();
+			imageAttr.setAttributeID(attrID);
+			imageAttr.setImageID(imageID);
+			imageAttr.setState(0);
+			list.add(imageAttr);
+			imageAttr.save();
+		}
+		
 		Iterator<ImageAttributeDao> it = list.iterator();
 		
 		while(it.hasNext()) {
@@ -124,18 +139,6 @@ public class TagEditorLogic {
 				}
 			}
 		}
-		Set<Long> allVisiableAttrIDs = config.listAllAttributeVisiableIDS();
-		for(ImageAttributeDao imageAttr:list) {
-			allVisiableAttrIDs.remove(imageAttr.getAttributeID());
-		}
-		for(long attrID:allVisiableAttrIDs) {
-			ImageAttributeDao imageAttr = ImageAttributeDao.manager.create();
-			imageAttr.setAttributeID(attrID);
-			imageAttr.setImageID(imageID);
-			imageAttr.setState(0);
-			imageAttr.save();
-			list.add(imageAttr);
-		}
 		return list;
 	}
 	
@@ -153,7 +156,7 @@ public class TagEditorLogic {
 		TreeSet<AttributeDao> sortSet = new TreeSet<AttributeDao>(new Comparator<AttributeDao>() {
 			@Override
 			public int compare(AttributeDao o1, AttributeDao o2) {
-				int c = o1.getImportance() - o2.getImportance();
+				int c = o2.getImportance() - o1.getImportance();
 				if(c == 0) {
 					return (int) (o1.getId() - o2.getId());
 				}

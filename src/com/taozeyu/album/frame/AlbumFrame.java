@@ -54,7 +54,7 @@ public class AlbumFrame extends JFrame {
 		@Override
 		public void keyReleased(KeyEvent evt) {
 			
-			if(evt.getKeyCode() == KeyEvent.VK_SPACE) {
+			if(evt.getKeyCode() == KeyEvent.VK_F2) {
 				
 				AlbumManager.instance().getTagEditorLogic().changeVisiable();
 				
