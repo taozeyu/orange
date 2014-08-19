@@ -1,7 +1,7 @@
 package com.taozeyu.album.frame;
 
 import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.GridLayout;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.LinkedList;
@@ -21,7 +21,7 @@ import com.taozeyu.album.dao.TagDao;
 public class TagEditorFrame extends JFrame {
 
 	private static final int Width = 210, Height = 420;
-	private static final int ButtonWidth = 50, ButtonHeight = 20;
+	private static final int ButtonWidth = 50, ButtonHeight = 45;
 	
 	private static final long serialVersionUID = 6647796932230894447L;
 
@@ -33,12 +33,14 @@ public class TagEditorFrame extends JFrame {
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		setAlwaysOnTop(true);
 		setResizable(false);
-		setSize(Width, Height);
+		setSize(Width + 10, Height + 10);
 		setLocation(0, 0);
 		
 		JScrollPane scrollPane = new JScrollPane();
 		container = new JPanel();
 		container.setLayout(null);
+		
+		scrollPane.getVerticalScrollBar().setUnitIncrement(27);
 		
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
@@ -63,7 +65,7 @@ public class TagEditorFrame extends JFrame {
 	
 	private JPanel getItemPanel(final AttributeDao attrBean, List<TagDao> tagsList) {
 		JPanel itemPanel = new JPanel();
-		itemPanel.setLayout(new FlowLayout());
+		itemPanel.setLayout(new GridLayout(tagsList.size() + 2, 1));
 
 		itemPanel.setToolTipText(attrBean.getInfo());
 		itemPanel.setBorder(BorderFactory.createTitledBorder(attrBean.getName()));
@@ -122,13 +124,7 @@ public class TagEditorFrame extends JFrame {
 				closePanel.run();
 			}
 		});
-		int height = itemPanel.getPreferredSize().height;
-		int rows = itemPanel.getPreferredSize().width / Width ;
-		
-		if(itemPanel.getPreferredSize().width % Width != 0) {
-			rows += 1;
-		}
-		height *= rows;
+		int height = (tagsList.size() + 2) * ButtonHeight;
 		
 		itemPanel.setSize(new Dimension(Width, height));
 		itemPanel.setPreferredSize(new Dimension(Width, height));

@@ -58,6 +58,10 @@ public class AlbumFrame extends JFrame {
 				
 				AlbumManager.instance().getTagEditorLogic().changeVisiable();
 				
+			} else if(evt.getKeyCode() == KeyEvent.VK_F3) {
+				
+				
+				
 			} else if(evt.getKeyCode() == KeyEvent.VK_F5) {
 				int code = JOptionPane.showConfirmDialog(
 						AlbumFrame.this, "确定与标签配置文件.json同步一次？"
