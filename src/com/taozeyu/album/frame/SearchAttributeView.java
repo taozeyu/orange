@@ -175,6 +175,10 @@ public class SearchAttributeView extends JPanel {
 	public long getId() {
 		return id;
 	}
+	
+	public String getAttributeName() {
+		return name;
+	}
 
 	public int getImportance() {
 		return importance;

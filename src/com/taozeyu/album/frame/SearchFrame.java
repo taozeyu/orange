@@ -68,6 +68,8 @@ public class SearchFrame extends JFrame {
 			jScrollPane0.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
 			jScrollPane0.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 			jScrollPane0.setViewportView(getSearchViewPanel());
+			
+			jScrollPane0.getVerticalScrollBar().setUnitIncrement(27);
 		}
 		return jScrollPane0;
 	}

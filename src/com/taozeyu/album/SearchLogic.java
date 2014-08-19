@@ -96,7 +96,7 @@ public class SearchLogic {
 				if(importance1 != importance2) {
 					return importance1 - importance2;
 				}
-				int comp = sav1.getName().compareTo(sav2.getName());
+				int comp = sav1.getAttributeName().compareTo(sav2.getAttributeName());
 				if(comp != 0) {
 					return comp;
 				}
@@ -146,12 +146,27 @@ public class SearchLogic {
 		
 		List<TagDao> tagsList = TagDao.manager
 				.findAll(new LinkedList<TagDao>(), "attributeID = ? AND hide = 0", bean.getId());
-		Iterator<TagDao> tagsIterator = tagsList.iterator();
-		TagNode[] tags = new TagNode[tagsList.size()];
+		
+		TreeSet<TagDao> sortSet = new TreeSet<TagDao>(new Comparator<TagDao>() {
+
+			@Override
+			public int compare(TagDao tag1, TagDao tag2) {
+				int comp = tag1.getName().compareTo(tag2.getName());
+				if(comp == 0) {
+					comp = (int) (tag1.getId() - tag2.getId());
+				}
+				return comp;
+			}
+		});
+		sortSet.addAll(tagsList);
+		
+		Iterator<TagDao> tagsIterator = sortSet.iterator();
+		TagNode[] tags = new TagNode[sortSet.size()];
 		
 		for(int i=0; i<tags.length; ++i) {
 			TagDao tag = tagsIterator.next();
-			tags[i] = new TagNode(tag.getId(), tag.getName(), tag.getInfo());
+			String name = tag.getName().replaceAll("^\\(\\d+\\)", "");//去掉(13)这样的序列
+			tags[i] = new TagNode(tag.getId(), name, tag.getInfo());
 		}
 		DepandNode dependNode = null;
 		
