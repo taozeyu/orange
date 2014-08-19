@@ -10,6 +10,7 @@ import java.awt.event.WindowEvent;
 import java.io.File;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -17,6 +18,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import javax.swing.ComboBoxModel;
@@ -80,20 +82,55 @@ public class SearchLogic {
 		
 		int startY = 0;
 		
+		TreeSet<SearchAttributeView> sortSet = new TreeSet<SearchAttributeView>(new Comparator<SearchAttributeView>() {
+
+			@Override
+			public int compare(SearchAttributeView sav1, SearchAttributeView sav2) {
+				int depth1 = getAttributeViewDepth(sav1);
+				int depth2 = getAttributeViewDepth(sav2);
+				if(depth1 != depth2) {
+					return depth1 - depth2;
+				}
+				int importance1 = sav1.getImportance();
+				int importance2 = sav2.getImportance();
+				if(importance1 != importance2) {
+					return importance1 - importance2;
+				}
+				int comp = sav1.getName().compareTo(sav2.getName());
+				if(comp != 0) {
+					return comp;
+				}
+				return sav1.hashCode() - sav2.hashCode();
+			}
+		});
+		
 		for(AttributeDao bean:list) {
 			SearchAttributeView view = translateFrom(bean, idmap);
 			if(view != null) {
 				int height = countRealHeight(view, width);
 				view.setLocation(0, startY);
 				view.setSize(width, height);
-				panel.add(view);
-				viewList.add(view);
+				sortSet.add(view);
 				panel.setPreferredSize(new Dimension(0, 0));
 				idmap.put(bean.getId(), view);
 				startY += height;
 			}
 		}
+		for(SearchAttributeView view:sortSet) {
+			panel.add(view);
+			viewList.add(view);
+		}
 		panel.setPreferredSize(new Dimension(width, startY));
+	}
+	
+	private int getAttributeViewDepth(SearchAttributeView view) {
+		int depth = 0;
+		DepandNode depend;
+		while((depend = view.getDepend()) != null) {
+			view = depend.getView();
+			depth++;
+		}
+		return depth;
 	}
 	
 	private int countRealHeight(SearchAttributeView view, int width) {

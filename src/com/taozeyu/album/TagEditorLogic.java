@@ -179,7 +179,12 @@ public class TagEditorLogic {
 	private void chooseImageAttribute(AttributeDao attr) throws SQLException {
 		
 		List<TagDao> tagsList = TagDao.manager.findAll(
-				new LinkedList<TagDao>(), "attributeID = ? AND hide = 0", attr.getId());
+				new LinkedList<TagDao>(), "attributeID = ? AND hide = 0", "name, id", attr.getId());
+		
+		for(TagDao tag:tagsList) {
+			String name = tag.getName();
+			name = name.replaceAll("^\\(\\d+\\)\\s*", ""); //删除诸如(12)这样的序号
+		}
 		frame.addItem(attr, tagsList);
 	}
 }

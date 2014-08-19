@@ -179,4 +179,8 @@ public class SearchAttributeView extends JPanel {
 	public int getImportance() {
 		return importance;
 	}
+
+	public DepandNode getDepend() {
+		return depend;
+	}
 }

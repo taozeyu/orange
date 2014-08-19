@@ -115,16 +115,18 @@ class ConfigLoader {
 		}
 		
 		for(int i=0; i<json.length(); ++i) {
+			
+			String attrName = "unkown";
 			try{
 				//解析是以Attribute为单位，某个Attribute的错误不会中断解析。（除非错误影响都之后的解析）
 				JSONObject attrJson = json.getJSONObject(i);
-				String attrName = attrJson.getString("name");
+				attrName = attrJson.getString("name");
 				synAttribute(attrName, attrJson);
 				
 			} catch(ConfigParseException e) {
 				e.printStackTrace();
 			} catch(JSONException e) {
-				e.printStackTrace();
+				System.err.println("来自\""+attrName+"\"的JSON解析错误："+e.getMessage());
 			}
 		}
 	}
