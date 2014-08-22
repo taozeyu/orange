@@ -35,7 +35,7 @@ public class AlbumManager {
 		this.albumFrame = new AlbumFrame();
 		this.tagEditorLogic = new TagEditorLogic();
 		
-		dbManager.setEnablePrintSql(false);
+		dbManager.setEnablePrintSql(true);
 	}
 	
 	public void dispose() {

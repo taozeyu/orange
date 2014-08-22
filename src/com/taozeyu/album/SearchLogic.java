@@ -333,7 +333,8 @@ public class SearchLogic {
 			List<ImageDao> imageList;
 			
 			if(mustSet.isEmpty() && excludeSet.isEmpty()) {
-				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>());
+				//TODO temp
+				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), "filePath not like '%%Ê¯»Ý%%'");
 				
 			} else {
 				
@@ -358,6 +359,8 @@ public class SearchLogic {
 				} else {
 					condition = conditionList.get(0);
 				}
+				//TODO temp:
+				condition += "AND filePath not like '%%Ê¯»Ý%%'";
 				
 				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), condition, args);
 			}
