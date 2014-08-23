@@ -40,9 +40,12 @@ public class AlbumFrame extends JFrame {
 		this.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				int rsCode = JOptionPane.showConfirmDialog(AlbumFrame.this, "确定要退出橘子相册吗？", "退出确认", JOptionPane.OK_CANCEL_OPTION);
-				if(rsCode == JOptionPane.OK_OPTION) {
-					AlbumManager.instance().dispose();
+				AlbumManager albumManager = AlbumManager.instance();
+				if(albumManager.getSearchLogic().isVisable()) {
+					AlbumFrame.this.setVisible(false);
+					AlbumManager.instance().getTagEditorLogic().setVisiable(false);
+				} else {
+					albumManager.confirmExit(AlbumFrame.this);
 				}
 			}
 		});
@@ -54,13 +57,30 @@ public class AlbumFrame extends JFrame {
 		@Override
 		public void keyReleased(KeyEvent evt) {
 			
-			if(evt.getKeyCode() == KeyEvent.VK_F2) {
+			AlbumManager albumManager = AlbumManager.instance();
+			
+			if(evt.getKeyCode() == KeyEvent.VK_F1) {
 				
-				AlbumManager.instance().getTagEditorLogic().changeVisiable();
+				JOptionPane.showMessageDialog(AlbumFrame.this, 
+						"按下F1 - 帮助信息\n"
+						+ "按下F2 - 打开搜索面板\n"
+						+ "按下F3 - 开启/关闭标签编辑器\n"
+						+ "按下F5 - 同步配置.json文件"
+				);
 				
+			} else if(evt.getKeyCode() == KeyEvent.VK_F2) {
+				
+				albumManager.getTagEditorLogic().changeVisiable();
+
 			} else if(evt.getKeyCode() == KeyEvent.VK_F3) {
 				
-				
+				if(!albumManager.getSearchLogic().isVisable()) {
+					try {
+						albumManager.getSearchLogic().setVisiable(true);
+					} catch (Exception e) {
+						throw new RuntimeException(e);
+					}
+				}
 				
 			} else if(evt.getKeyCode() == KeyEvent.VK_F5) {
 				int code = JOptionPane.showConfirmDialog(

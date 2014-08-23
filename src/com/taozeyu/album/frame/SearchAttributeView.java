@@ -3,6 +3,8 @@ package com.taozeyu.album.frame;
 import java.awt.FlowLayout;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Vector;
 
@@ -15,6 +17,8 @@ public class SearchAttributeView extends JPanel {
 
 	private static final long serialVersionUID = 7891831078386960931L;
 
+	public Runnable onStateChanged = null;
+	
 	private final long id;
 	private final int importance;
 	private final String name;
@@ -22,6 +26,8 @@ public class SearchAttributeView extends JPanel {
 	
 	private final DepandNode depend;
 	private final TagNode[] tags;
+	
+	private final HashMap<Long, JComboBox<?>> comboBoxMap = new HashMap<Long, JComboBox<?>>();
 	
 	public enum TagState {
 		
@@ -106,6 +112,31 @@ public class SearchAttributeView extends JPanel {
 		initComponent();
 	}
 	
+	public void setTagState(Collection<Long> excludeTagsID, Collection<Long> mustTagsID) {
+		
+		for(JComboBox<?> cb:comboBoxMap.values()) {
+			cb.setSelectedItem(TagState.NotChoose);
+		}
+		for(long id:excludeTagsID) {
+			JComboBox<?> cb = comboBoxMap.get(id);
+			if(cb != null ) {
+				cb.setSelectedItem(TagState.Exclude);
+			}
+		}
+		for(long id:mustTagsID) {
+			JComboBox<?> cb = comboBoxMap.get(id);
+			if(cb != null ) {
+				cb.setSelectedItem(TagState.Must);
+			}
+		}
+	}
+	
+	private void currConditionChanged() {
+		if(onStateChanged != null) {
+			onStateChanged.run();
+		}
+	}
+	
 	private void initComponent() {
 		
 		if(depend != null) {
@@ -119,6 +150,7 @@ public class SearchAttributeView extends JPanel {
 			final TagNode tag = this.tags[i];
 			JPanel childPanel = new JPanel();
 			final JComboBox<TagState> cb = new JComboBox<>(getDefaultVecotr());
+			comboBoxMap.put(tag.getId(), cb);
 			childPanel.add(cb);
 			childPanel.add(new JLabel(" "+tag.name+"	"));
 			childPanel.setToolTipText(tag.info);
@@ -134,6 +166,7 @@ public class SearchAttributeView extends JPanel {
 					for(SearchAttributeView view : tag.dependOnList) {
 						view.setAllEnabled(dependEnabled);
 					}
+					currConditionChanged();
 				}
 			});
 			add(childPanel);

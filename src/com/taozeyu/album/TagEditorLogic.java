@@ -1,5 +1,8 @@
 package com.taozeyu.album;
 
+import java.awt.Point;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -25,14 +28,28 @@ public class TagEditorLogic {
 		frame.setVisible(!frame.isVisible());
 	}
 	
+	public void setVisiable(boolean value) {
+		frame.setVisible(value);
+	}
+	
 	private long currImageID;
 	
 	public void changeImageSource(ImageSource imageSource) {
 		
 		boolean lastFrameIsVisable = frame.isVisible();
-		frame.dispose();
+		Point location = frame.getLocation();
+		frame.close();
 		frame = new TagEditorFrame();
+		frame.setLocation(location);
 		frame.setVisible(lastFrameIsVisable);
+		
+		frame.addWindowListener(new WindowAdapter() {
+
+			@Override
+			public void windowClosing(WindowEvent e) {
+				setVisiable(false);
+			}
+		});
 		
 		currImageID = imageSource.getImageID();
 		

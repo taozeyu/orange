@@ -3,11 +3,16 @@ package com.taozeyu.album;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Toolkit;
+import java.awt.event.InputMethodEvent;
+import java.awt.event.InputMethodListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -19,14 +24,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.TreeSet;
+import java.util.Vector;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
 
 import javax.swing.ComboBoxModel;
 import javax.swing.DefaultComboBoxModel;
+import javax.swing.JComboBox;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.ListCellRenderer;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import com.taozeyu.album.dao.AttributeDao;
 import com.taozeyu.album.dao.ImageDao;
@@ -40,14 +54,21 @@ import com.taozeyu.album.frame.SearchFrame;
 
 public class SearchLogic {
 	
+	private static final String DefaultName = "(未命名搜索条件)";
+	
 	private final SearchFrame frame;
 
 	private final ComboBoxModel<String> searchItemList;
+	private int currSearchIndex = -1;
+	private boolean currSearchChanged = false;
 	
 	private boolean hasInitFrame = false;
 	private final List<SearchAttributeView> viewList = new LinkedList<SearchAttributeView>();
 	
-	public SearchLogic() throws SQLException {
+	private final SearchParameterSaver searchParameterSaver;
+	
+	public SearchLogic() throws SQLException, IOException {
+		this.searchParameterSaver = new SearchParameterSaver();
 		this.searchItemList = new DefaultComboBoxModel<String>();
 		this.frame = new SearchFrame(
 				searchItemList,
@@ -63,6 +84,157 @@ public class SearchLogic {
 					}
 				}
 		);
+	}
+	
+	private void initParams() throws IOException {
+		searchParameterSaver.initFromFile();
+		JComboBox<String> cb = frame.getCbSearchCondition();
+		List<String> namesList = searchParameterSaver.getNamesList(DefaultName);
+		
+		namesList.add(0, DefaultName);
+		searchParameterSaver.put(DefaultName, searchParameterSaver.getEmpty());
+		
+		cb.setModel(new DefaultComboBoxModel<String>(new Vector<String>(namesList)));
+		cb.setSelectedIndex(0);
+		searchParameterComboBoxChange(0);
+	}
+	
+	private void searchParameterComboBoxChange(int index) {
+		
+		if(currSearchIndex == index) {
+			return;
+		}
+		
+		if(currSearchChanged) {
+			searchParameterSaver.put(getName(currSearchIndex), readObjFromCurrSearchPanel());
+		}
+		currSearchChanged = false;
+		currSearchIndex = index;
+		
+		JSONObject obj;
+		if(index == 0) {
+			obj = searchParameterSaver.get(DefaultName);
+		}else {
+			String name = frame.getCbSearchCondition().getItemAt(index);
+			obj = searchParameterSaver.get(name);
+		}
+		setCurrSearchPanelWithObj(obj);
+	}
+	
+	private void currConditionChanged() {
+		currSearchChanged = true;
+	}
+	
+	private void clickSaveButton() {
+
+		try {
+			if (currSearchIndex == 0) {
+				
+				String name;
+				
+				while(true) {
+					
+					name = JOptionPane.showInputDialog(frame, "请输入保存的名字");
+					if(name == null) {
+						return;
+					}
+					if(searchParameterSaver.get(name) == null) {
+						break;
+					}
+					int code = JOptionPane.showConfirmDialog(
+							frame, "\"" + name + "\"已存在，是否覆盖？",
+							"保存", JOptionPane.YES_NO_CANCEL_OPTION);
+					
+					if(code == JOptionPane.YES_OPTION) {
+						break;
+					} else if(code == JOptionPane.NO_OPTION) {
+						continue;
+					} else if(code == JOptionPane.CANCEL_OPTION) {
+						return;
+					}
+				}
+				searchParameterSaver.put(name, readObjFromCurrSearchPanel());
+				searchParameterSaver.save(name);
+				
+				List<String> namesList = searchParameterSaver.getNamesList(DefaultName);
+				namesList.add(0, DefaultName);
+				
+				frame.getCbSearchCondition().setModel(
+						new DefaultComboBoxModel<String>(new Vector<String>(namesList))
+				);
+				for(int i=0; i<namesList.size(); ++i) {
+					if(namesList.get(i).equals(name)) {
+						frame.getCbSearchCondition().setSelectedIndex(i);
+						searchParameterComboBoxChange(i);
+						break;
+					}
+				}
+				
+			} else {
+
+				String name = getName(currSearchIndex);
+				if (currSearchChanged) {
+					searchParameterSaver
+							.put(name, readObjFromCurrSearchPanel());
+				}
+				searchParameterSaver.save(name);
+			}
+		} catch (IOException e) {
+			JOptionPane.showMessageDialog(frame, "保存时出错 "+ e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+		}
+		JOptionPane.showMessageDialog(frame, "保存成功！");
+	}
+
+	private JSONObject readObjFromCurrSearchPanel() {
+		
+		JSONObject obj = new JSONObject();
+		obj.put("filter", frame.getJcbFilter().isSelected());
+		obj.put("filter_regx", frame.getJtfFilePathFilter().getText());
+		
+		LinkedList<Long> mustList = new LinkedList<Long>();
+		LinkedList<Long> excludeList = new LinkedList<Long>();
+		
+		for(SearchAttributeView view:viewList) {
+			for(TagNode node:view.getTags()) {
+				TagState state = node.getState();
+				if(state == TagState.Exclude) {
+					excludeList.add(node.getId());
+				} else if (state == TagState.Must) {
+					mustList.add(node.getId());
+				}
+			}
+		}
+		obj.put("must", mustList);
+		obj.put("exclude", excludeList);
+		
+		return obj;
+	}
+	
+	private void setCurrSearchPanelWithObj(JSONObject obj) {
+		frame.getJcbFilter().setSelected(obj.getBoolean("filter"));
+		frame.getJtfFilePathFilter().setText(obj.getString("filter_regx"));
+		
+		LinkedList<Long> mustList = toList(obj.getJSONArray("must"));
+		LinkedList<Long> excludeList = toList(obj.getJSONArray("exclude"));
+		
+		for(SearchAttributeView view:viewList) {
+			view.setTagState(excludeList, mustList);
+		}
+	}
+	
+	private LinkedList<Long> toList(JSONArray arr) {
+		LinkedList<Long> list = new LinkedList<Long>();
+		for(int i=0; i<arr.length(); ++i) {
+			list.add(arr.getLong(i));
+		}
+		return list;
+	}
+	
+	private String getName(int index) {
+		if(index == 0) {
+			return DefaultName;
+		}
+		return searchParameterSaver.getNamesList(DefaultName).get(index - 1);
 	}
 	
 	private void initPanel() throws SQLException {
@@ -114,6 +286,13 @@ public class SearchLogic {
 				panel.setPreferredSize(new Dimension(0, 0));
 				idmap.put(bean.getId(), view);
 				startY += height;
+				
+				view.onStateChanged = new Runnable() {
+					@Override
+					public void run() {
+						currConditionChanged();
+					}
+				};
 			}
 		}
 		for(SearchAttributeView view:sortSet) {
@@ -121,6 +300,36 @@ public class SearchLogic {
 			viewList.add(view);
 		}
 		panel.setPreferredSize(new Dimension(width, startY));
+
+		final JComboBox<String> cb = frame.getCbSearchCondition();
+		cb.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				searchParameterComboBoxChange(cb.getSelectedIndex());
+			}
+		});
+		frame.getBtnSaveCondition().addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				clickSaveButton();
+			}
+		});
+		frame.getJcbFilter().addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				currConditionChanged();
+			}
+		});
+		frame.getJtfFilePathFilter().addInputMethodListener(new InputMethodListener() {
+			
+			@Override
+			public void inputMethodTextChanged(InputMethodEvent event) {
+				currConditionChanged();
+			}
+			
+			@Override
+			public void caretPositionChanged(InputMethodEvent event) { }
+		});
 	}
 	
 	private int getAttributeViewDepth(SearchAttributeView view) {
@@ -199,11 +408,12 @@ public class SearchLogic {
 		initPanel();
 	}
 	
-	public void setVisiable(boolean value) throws SQLException {
+	public void setVisiable(boolean value) throws SQLException, IOException {
 		if (value) {
 			if(!hasInitFrame) {
 				initFrame();
 				initPanel();
+				initParams();
 				hasInitFrame = true;
 			}
 			Toolkit kit = frame.getToolkit();
@@ -214,6 +424,10 @@ public class SearchLogic {
 			);
 		}
 		frame.setVisible(value);
+	}
+	
+	public boolean isVisable(){
+		return frame.isVisible();
 	}
 	
 	private void onClickLoadFromDir() {
@@ -333,8 +547,7 @@ public class SearchLogic {
 			List<ImageDao> imageList;
 			
 			if(mustSet.isEmpty() && excludeSet.isEmpty()) {
-				//TODO temp
-				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), "filePath not like '%%石惠%%'");
+				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>());
 				
 			} else {
 				
@@ -359,24 +572,50 @@ public class SearchLogic {
 				} else {
 					condition = conditionList.get(0);
 				}
-				//TODO temp:
-				condition += "AND filePath not like '%%石惠%%'";
-				
 				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), condition, args);
 			}
 			
 			if(imageList.isEmpty()) {
 				JOptionPane.showMessageDialog(frame, "找不到任何符合条件的结果！", "信息", JOptionPane.PLAIN_MESSAGE);
 			}else {
+				String filter = frame.getJtfFilePathFilter().getText();
+				if(!"".equals(filter)) {
+					try {
+						Pattern pattern = Pattern.compile(filter);
+						Iterator<ImageDao> it = imageList.iterator();
+						
+						boolean willFilter = frame.getJcbFilter().isSelected();
+						
+						while(it.hasNext()) {
+							ImageDao image = it.next();
+							Matcher matcher = pattern.matcher(image.getFilePath());
+							if(matcher.find()) {
+								if(willFilter) {
+									it.remove();
+								}
+							} else {
+								if(!willFilter) {
+									it.remove();
+								}
+							}
+						}
+						
+					} catch (PatternSyntaxException e) {
+						JOptionPane.showMessageDialog(
+								frame, "文件地址过滤条件不是正则表达式，或语法错误。该过滤条件将不起作用。",
+								"错误", JOptionPane.ERROR_MESSAGE
+						);
+					}
+				}
 				showImages(imageList);
 			}
-		} catch (SQLException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(frame, e.getMessage(), "搜索出错啦！", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 	
-	private void showImages(List<ImageDao> imageList) {
+	private void showImages(List<ImageDao> imageList) throws SQLException, IOException {
 		
 		//扑克牌算法打乱顺序
 		Random rand = new Random();
@@ -390,7 +629,7 @@ public class SearchLogic {
 		AlbumFrame albumFrame = AlbumManager.instance().getAlbumFrame();
 		albumFrame.resetImageList(imageList);
 		albumFrame.setVisible(true);
-		frame.setVisible(false);
+		this.setVisiable(false);
 	}
 	
 	private void initFrame() {
@@ -422,16 +661,22 @@ public class SearchLogic {
 		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
-				int rsCode = JOptionPane.showConfirmDialog(frame, "确定要退出橘子相册吗？", "退出确认", JOptionPane.OK_CANCEL_OPTION);
-				if(rsCode == JOptionPane.OK_OPTION) {
-					AlbumManager.instance().dispose();
+				AlbumManager albumManager = AlbumManager.instance();
+				if(albumManager.getAlbumFrame().isVisible()) {
+					try {
+						SearchLogic.this.setVisiable(false);
+					} catch (Exception e1) {
+						throw new RuntimeException(e1);
+					}
+				} else {
+					albumManager.confirmExit(frame);
 				}
 			}
 			@Override
 			public void windowIconified(WindowEvent evt) {
 				try {
 					setVisiable(false);
-				} catch (SQLException e) {
+				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}

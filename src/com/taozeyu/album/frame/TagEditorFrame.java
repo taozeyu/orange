@@ -25,11 +25,13 @@ public class TagEditorFrame extends JFrame {
 	
 	private static final long serialVersionUID = 6647796932230894447L;
 
+	private final LinkedList<Runnable> closedRunnables = new LinkedList<Runnable>();
+	
 	private final JPanel container;
 	private int startYLocation = 0;
 	
 	public TagEditorFrame() {
-		setTitle("Í¼Æ¬±êÇ©Ë³ÊÖÌî - °´ F5 ¿ªÆô/Òþ²Ø±¾´°¿Ú");
+		setTitle("F5 ¿ªÆô/Òþ²Ø");
 		setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
 		setAlwaysOnTop(true);
 		setResizable(false);
@@ -47,6 +49,13 @@ public class TagEditorFrame extends JFrame {
 		scrollPane.setViewportView(container);
 		
 		add(scrollPane);
+	}
+	
+	public void close() {
+		for(Runnable run : closedRunnables) {
+			run.run();
+		}
+		dispose();
 	}
 	
 	public void clearitems() {
@@ -122,6 +131,23 @@ public class TagEditorFrame extends JFrame {
 				}
 				AlbumManager.instance().getTagEditorLogic().onSubmitTags(attrBean, tagIDList);
 				closePanel.run();
+			}
+		});
+		closedRunnables.add(new Runnable() {
+			@Override
+			public void run() {
+				LinkedList<Long> tagIDList = new LinkedList<Long>();
+				for(int i=0; i<tagsArray.length; ++i) {
+					JCheckBox jcb = jbcArray[i];
+					TagDao tagBean = tagsArray[i];
+					if(jcb.isSelected()) {
+						tagIDList.add(tagBean.getId());
+					}
+				}
+				if(!tagIDList.isEmpty()) {
+					AlbumManager.instance().getTagEditorLogic().onSubmitTags(attrBean, tagIDList);
+					closePanel.run();
+				}
 			}
 		});
 		int height = (tagsList.size() + 2) * ButtonHeight;
