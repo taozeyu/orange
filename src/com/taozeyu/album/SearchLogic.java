@@ -575,38 +575,40 @@ public class SearchLogic {
 				imageList = ImageDao.manager.findAll(new ArrayList<ImageDao>(), condition, args);
 			}
 			
+			String filter = frame.getJtfFilePathFilter().getText();
+			if(!"".equals(filter)) {
+				try {
+					Pattern pattern = Pattern.compile(filter);
+					Iterator<ImageDao> it = imageList.iterator();
+					
+					boolean willFilter = frame.getJcbFilter().isSelected();
+					
+					while(it.hasNext()) {
+						ImageDao image = it.next();
+						Matcher matcher = pattern.matcher(image.getFilePath());
+						if(matcher.find()) {
+							if(willFilter) {
+								it.remove();
+							}
+						} else {
+							if(!willFilter) {
+								it.remove();
+							}
+						}
+					}
+					
+				} catch (PatternSyntaxException e) {
+					JOptionPane.showMessageDialog(
+							frame, "文件地址过滤条件不是正则表达式，或语法错误。该过滤条件将不起作用。",
+							"错误", JOptionPane.ERROR_MESSAGE
+					);
+				}
+			}
+			
 			if(imageList.isEmpty()) {
 				JOptionPane.showMessageDialog(frame, "找不到任何符合条件的结果！", "信息", JOptionPane.PLAIN_MESSAGE);
 			}else {
-				String filter = frame.getJtfFilePathFilter().getText();
-				if(!"".equals(filter)) {
-					try {
-						Pattern pattern = Pattern.compile(filter);
-						Iterator<ImageDao> it = imageList.iterator();
-						
-						boolean willFilter = frame.getJcbFilter().isSelected();
-						
-						while(it.hasNext()) {
-							ImageDao image = it.next();
-							Matcher matcher = pattern.matcher(image.getFilePath());
-							if(matcher.find()) {
-								if(willFilter) {
-									it.remove();
-								}
-							} else {
-								if(!willFilter) {
-									it.remove();
-								}
-							}
-						}
-						
-					} catch (PatternSyntaxException e) {
-						JOptionPane.showMessageDialog(
-								frame, "文件地址过滤条件不是正则表达式，或语法错误。该过滤条件将不起作用。",
-								"错误", JOptionPane.ERROR_MESSAGE
-						);
-					}
-				}
+				
 				showImages(imageList);
 			}
 		} catch (Exception e) {
